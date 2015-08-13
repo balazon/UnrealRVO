@@ -28,6 +28,15 @@ public:
 	int GetCurrentID();
 	
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
+		float radius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
+		float MaxVelocity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
+		float MaxAcceleration;
+
 protected:
 
 	IAvoidanceUnit* unit;
@@ -39,14 +48,7 @@ protected:
 	int currentID;
 	int nextID;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
-	float radius;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
-	float MaxVelocity;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
-	float MaxAcceleration;
 	
 	
 };

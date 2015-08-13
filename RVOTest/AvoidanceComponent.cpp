@@ -59,7 +59,7 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 
 	MaxVelocity = mc->GetMaxSpeed();
 	
-	FVector2D PreferredVelocity = unit->PreferredVelocity();
+	FVector2D PreferredVelocity = unit->Execute_PreferredVelocity(pawn);
 
 	/*PreferredVelocity = target - pos;
 	float distSq = PreferredVelocity.SizeSquared();
