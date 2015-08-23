@@ -12,13 +12,15 @@ AORCAManager::AORCAManager()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	FBalaRVOModule::Solver()->ClearAgents();
 }
 
 // Called when the game starts or when spawned
 void AORCAManager::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
 
 	for (TActorIterator<AActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
@@ -29,7 +31,7 @@ void AORCAManager::BeginPlay()
 		
 		if (unit)
 		{
-			AddTickPrerequisiteComponent(unit->GetAvoidanceComponent());
+			AddTickPrerequisiteComponent(unit->Execute_GetAvoidanceComponent(pawn));
 			units.Add(pawn);
 		}
 		
@@ -50,14 +52,14 @@ void AORCAManager::Tick(float DeltaTime)
 	{
 		IAvoidanceUnit* unit = Cast<IAvoidanceUnit>(pawn);
 	
-
-		int id = unit->GetAvoidanceComponent()->GetCurrentID();
+		UAvoidanceComponent* av = unit->Execute_GetAvoidanceComponent(pawn);
+		int id = av->GetCurrentID();
 
 		Agent& agent = solver->GetAgent(id);
 
 		unit->Execute_SetNewAvoidanceVelocity(pawn, FVector2D{ agent.vx_new, agent.vy_new });
 
-		unit->GetAvoidanceComponent()->UpdateID();
+		av->UpdateID();
 		
 	}
 }
@@ -67,7 +69,7 @@ void AORCAManager::Tick(float DeltaTime)
 
 void AORCAManager::SimulateORCA()
 {
-	ORCASolver* solver = FBalaRVOModule::Solver();
+	/*ORCASolver* solver = FBalaRVOModule::Solver();
 	solver->ComputeNewVelocities();
 
 	
@@ -86,7 +88,7 @@ void AORCAManager::SimulateORCA()
 			
 			unit->GetAvoidanceComponent()->UpdateID();
 		}
-	}
+	}*/
 
 	
 }

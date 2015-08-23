@@ -25,8 +25,8 @@ public:
 		
 	void UpdateID();
 
-	int GetCurrentID();
-	
+	UFUNCTION(BlueprintCallable, Category = Avoidance, meta = (DisplayName = "Get Current Avoidance Id"))
+	int32 GetCurrentID();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
 		float radius;

@@ -31,7 +31,7 @@ class RVOTEST_API IAvoidanceUnit
 public:
 
 	
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent,  Category = Avoidance, meta = (DisplayName = "Avoidance Component"))
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent,  Category = Avoidance, meta = (DisplayName = "Get Avoidance Component"))
 	UAvoidanceComponent* GetAvoidanceComponent();
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = Avoidance, meta = (DisplayName = "Get Nearby Units"))

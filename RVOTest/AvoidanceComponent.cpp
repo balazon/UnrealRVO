@@ -14,12 +14,13 @@ UAvoidanceComponent::UAvoidanceComponent()
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
 
-	radius = 20.f;
+	radius = 84.f;
 
-	MaxVelocity = 300.f;
+	MaxVelocity = 600.f;
 
-	MaxAcceleration = 300.f;
-
+	MaxAcceleration = 2000.f;
+	
+	bAutoActivate = true;
 	// ...
 	
 }
@@ -82,7 +83,7 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 		IAvoidanceUnit* n = Cast<IAvoidanceUnit>(thepawn);
 		if (n)
 		{
-			UAvoidanceComponent* ac = n->GetAvoidanceComponent();
+			UAvoidanceComponent* ac = n->Execute_GetAvoidanceComponent(thepawn);
 			solver->SetAgentsNearby(currentID, ac->GetCurrentID());
 		}
 		
@@ -111,7 +112,7 @@ void UAvoidanceComponent::UpdateID()
 	currentID = nextID;
 }
 
-int UAvoidanceComponent::GetCurrentID()
+int32 UAvoidanceComponent::GetCurrentID()
 {
 	return currentID;
 }
