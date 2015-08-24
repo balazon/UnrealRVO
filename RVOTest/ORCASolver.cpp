@@ -248,6 +248,7 @@ void ORCASolver::ComputeNewVelocities()
 		}
 		Agent& a = agents[i];
 		solver.Reset();
+		UE_LOG(LogRVOTest, Warning, TEXT("vxpref %f %f"), a.vx_pref, a.vy_pref);
 		solver.SetDestination(a.vx_pref, a.vy_pref);
 		for (int j = 0; j < CA_MAXNEARBY; j++)
 		{
@@ -276,7 +277,11 @@ void ORCASolver::ComputeNewVelocities()
 		if (isnan(a.vx_new) || isnan(a.vy_new))
 		{
 			UE_LOG(LogRVOTest, Warning, TEXT("BAM\n"));
-
+			solver.Solve(a.vx_new, a.vy_new);
+			if (isnan(a.vx_new) || isnan(a.vy_new))
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("BAM confirm\n"));
+			}
 		}
 	}
 }

@@ -15,6 +15,8 @@
 
 bool IntersectLines(float A, float B, float C, float D, float E, float F, float& resX, float& resY)
 {
+	UE_LOG(LogRVOTest, Warning, TEXT("il params: %f %f %f %f %f %f"), A, B, C, D, E, F);
+
 	float denominator = D * B - E * A;
 	if (fabs(denominator) < EPS) return false;
 
@@ -32,6 +34,8 @@ bool IntersectLines(float A, float B, float C, float D, float E, float F, float&
 
 void OrthogonalProjectionOfPointOnLine(float A, float B, float C, float tx, float ty, float& resX, float& resY)
 {
+	UE_LOG(LogRVOTest, Warning, TEXT("oppl params: %f %f %f %f %f"), A, B, C, tx, ty);
+
 	float denominator = A * A + B * B;
 	resX = (B * B * tx - A * B * ty + A * C) / denominator;
 	resY = (A * A * ty - A * B * tx + B * C) / denominator;
@@ -43,6 +47,8 @@ void OrthogonalProjectionOfPointOnLine(float A, float B, float C, float tx, floa
 
 bool QuadraticEquation(float a, float b, float c, float& x1, float& x2)
 {
+	UE_LOG(LogRVOTest, Warning, TEXT("qe params: %f %f %f"), a, b, c);
+
 	std::cout << "quad: " << a << " , " << b << " , " << c << "\n";
 	float D;
 	if (fabs(a) < EPS)
@@ -73,6 +79,8 @@ bool QuadraticEquation(float a, float b, float c, float& x1, float& x2)
 
 bool IntersectLineCircle(float A, float B, float C, float u, float v, float r, float& x1, float& y1, float& x2, float& y2)
 {
+	UE_LOG(LogRVOTest, Warning, TEXT("ilc params: %f %f %f %f %f %f"), A, B, C, u, v, r);
+
 	bool swapped = false;
 	if (fabs(A) < EPS && fabs(B) < EPS)
 	{
@@ -104,6 +112,8 @@ bool IntersectLineCircle(float A, float B, float C, float u, float v, float r, f
 
 bool IntersectCircleCircle(float u1, float v1, float r1, float u2, float v2, float r2, float& x1, float& y1, float& x2, float& y2)
 {
+	UE_LOG(LogRVOTest, Warning, TEXT("icc params: %f %f %f %f %f %f"), u1, v1, r1, u2, v2, r2)
+
 	float A = u1 - u2;
 	float B = v1 - v2;
 	if (fabs(A) < EPS && fabs(B) < EPS)
@@ -115,6 +125,8 @@ bool IntersectCircleCircle(float u1, float v1, float r1, float u2, float v2, flo
 
 bool OrthogonalProjectionOfPointOnCircle(float u, float v, float r, float tx, float ty, float& resX, float& resY)
 {
+	UE_LOG(LogRVOTest, Warning, TEXT("params: %f %f %f %f %f"), u, v, r, tx, ty);
+
 	float OTx = tx - u;
 	float OTy = ty - v;
 	if (fabs(OTx) < EPS && fabs(OTy) < EPS)
@@ -139,4 +151,10 @@ void AngleBisector(float A, float B, float C, float D, float E, float F, float& 
 	G = A - D;
 	H = B - E;
 	I = C - F;
+
+	if (fabs(G) < EPS && fabs(H) < EPS)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("anglebisectorBAM"));
+
+	}
 }

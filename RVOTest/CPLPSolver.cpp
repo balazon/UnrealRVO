@@ -188,6 +188,10 @@ void CPLPSolver::updatePointIfBetter(float x, float y, int n, float& resX, float
 			resX = x;
 			resY = y;
 			d = td;
+			if (isnan(resX) || isnan(resY))
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("BAM in: updatepointifbetter"));
+			}
 		}
 	}
 }
@@ -311,15 +315,18 @@ void CPLPSolver::Solve(float& resX, float& resY)
 						resX = tx2;
 						resY = ty2;
 						minDistSqr = tdist;
-						if (constraintTypes[jd] == CT_LINEAR)
+						if (isnan(resX) || isnan(resY))
 						{
-							UE_LOG(LogRVOTest, Warning, TEXT("lin: "));
+							if (constraintTypes[jd] == CT_LINEAR)
+							{
+								UE_LOG(LogRVOTest, Warning, TEXT("lin: "));
+							}
+							else
+							{
+								UE_LOG(LogRVOTest, Warning, TEXT("cir: "));
+							}
+							UE_LOG(LogRVOTest, Warning, TEXT("%f %f %f "), constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2]);
 						}
-						else
-						{
-							UE_LOG(LogRVOTest, Warning, TEXT("cir: "));
-						}
-						UE_LOG(LogRVOTest, Warning, TEXT("%f %f %f "), constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2]);
 					}
 				}
 			}
@@ -381,6 +388,10 @@ void CPLPSolver::SolveSafest(float& resX, float& resY)
 			minDistSqr = tdist;
 			resX = tx;
 			resY = ty;
+			if (isnan(resX) || isnan(resY))
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("params: %f %f %f %f %f"), constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
+			}
 		}
 
 
@@ -428,7 +439,21 @@ void CPLPSolver::SolveSafest(float& resX, float& resY)
 						resX = tx;
 						resY = ty;
 						minDistSqr = tdist;
+						if (isnan(resX) || isnan(resY))
+						{
+							if (constraintTypes[id] == CT_LINEAR)
+							{
+								UE_LOG(LogRVOTest, Warning, TEXT("lin: "));
+							}
+							else
+							{
+								UE_LOG(LogRVOTest, Warning, TEXT("cir: "));
+							}
+
+							UE_LOG(LogRVOTest, Warning, TEXT("%f %f %f "), constraints[pos], constraints[pos + 1], constraints[pos + 2]);
+						}
 					}
+
 				}
 
 				if (!onePoint && pointSatisfiesConstraints(tx2, ty2, i, d))
@@ -439,6 +464,18 @@ void CPLPSolver::SolveSafest(float& resX, float& resY)
 						resX = tx2;
 						resY = ty2;
 						minDistSqr = tdist;
+						if (isnan(resX) || isnan(resY))
+						{
+							if (constraintTypes[jd] == CT_LINEAR)
+							{
+								UE_LOG(LogRVOTest, Warning, TEXT("lin: "));
+							}
+							else
+							{
+								UE_LOG(LogRVOTest, Warning, TEXT("cir: "));
+							}
+							UE_LOG(LogRVOTest, Warning, TEXT("%f %f %f "), constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2]);
+						}
 					}
 				}
 			}

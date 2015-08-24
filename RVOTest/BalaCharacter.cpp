@@ -43,6 +43,8 @@ ABalaCharacter::ABalaCharacter(const FObjectInitializer& ObjectInitializer)
 	mc = GetMovementComponent();
 
 	newVel = FVector{};
+
+	CurrentTarget = FVector2D{ GetActorLocation() };
 }
 
 // Called when the game starts or when spawned
@@ -126,8 +128,15 @@ FVector2D ABalaCharacter::PreferredVelocity_Implementation()
 	FVector2D ToTarget{ CurrentTarget - FVector2D{ GetActorLocation() } };
 	
 	float sqrDist = ToTarget.SizeSquared();
-	if (sqrDist < 100.f)
+	if (sqrDist < 800.f)
 		return FVector2D{};
+
+	FVector2D res = ToTarget / sqrtf(sqrDist) * AvoidanceComponent->MaxVelocity;
+
+	if (res.ContainsNaN())
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("ABalaCharacter:: PreferredV_impl , %f %f %f %f, res: %f %f"), sqrDist, AvoidanceComponent->MaxVelocity, ToTarget.X, ToTarget.Y, res.X, res.Y);
+	}
 
 	return ToTarget / sqrtf(sqrDist) * AvoidanceComponent->MaxVelocity;
 }

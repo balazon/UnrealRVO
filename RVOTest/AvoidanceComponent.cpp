@@ -4,7 +4,7 @@
 #include "AvoidanceComponent.h"
 
 
-
+#include "BalaCharacter.h"
 
 // Sets default values for this component's properties
 UAvoidanceComponent::UAvoidanceComponent()
@@ -60,8 +60,11 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 
 	MaxVelocity = mc->GetMaxSpeed();
 	
-	FVector2D PreferredVelocity = unit->Execute_PreferredVelocity(pawn);
-
+	//FVector2D PreferredVelocity = unit->Execute_PreferredVelocity(pawn);
+	ABalaCharacter* bc = Cast<ABalaCharacter>(unit);
+	FVector2D PreferredVelocity = bc->PreferredVelocity_Implementation();
+	//TOODO! to stop smoothly -> desired speed, acceleration? (steering behavs)
+	
 	/*PreferredVelocity = target - pos;
 	float distSq = PreferredVelocity.SizeSquared();
 	if (distSq > 100.f)
@@ -75,7 +78,13 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 	}*/
 	
 	// mc->GetMaxSpeed()
-	
+	//if (uni)
+	if (PreferredVelocity.ContainsNaN())
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("AvoidanceComponent:: TICK , preferredvelocity: %f %f"), PreferredVelocity.X, PreferredVelocity.Y);
+		FVector2D PreferredVelocity2 = unit->Execute_PreferredVelocity(pawn);
+
+	}
 	Agent agent{ pos.X, pos.Y, vel.X, vel.Y, radius, PreferredVelocity.X, PreferredVelocity.Y, MaxVelocity, MaxAcceleration * DeltaTime };
 
 	for (APawn*  thepawn : unit->Execute_GetNearbyUnits(pawn))
