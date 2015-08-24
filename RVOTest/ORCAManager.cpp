@@ -53,6 +53,15 @@ void AORCAManager::Tick(float DeltaTime)
 	Agent b = solver->GetAgent(bi);
 	solver->ComputeNewVelocities();
 
+	for (int i = 0; i < units.Num(); i++)
+	{
+		for (int j = i + 1; j < units.Num(); j++)
+		{
+			solver->SetAgentsNearby(i, j);
+			solver->SetAgentsNearby(j, i);
+		}
+	}
+
 	for (APawn* pawn : units)
 	{
 		IAvoidanceUnit* unit = Cast<IAvoidanceUnit>(pawn);
@@ -81,6 +90,31 @@ void AORCAManager::Tick(float DeltaTime)
 			
 			UE_LOG(LogRVOTest, Warning, TEXT("Agent a: x %f ,y %f, vx %f , vy %f, r %f , vx_p %f, vy_p %f, %f maxV, %f maxA"), a.x, a.y, a.vx, a.vy, a.r, a.vx_pref, a.vy_pref, a.maxVelocityMagnitude, a.maxAccMagnitude);
 			UE_LOG(LogRVOTest, Warning, TEXT("Agent b: x %f ,y %f, vx %f , vy %f, r %f , vx_p %f, vy_p %f, %f maxV, %f maxA"), b.x, b.y, b.vx, b.vy, b.r, b.vx_pref, b.vy_pref, b.maxVelocityMagnitude, b.maxAccMagnitude);
+
+			/*solver->ClearAgents();
+			solver->AddAgent();
+			solver->AddAgent();
+			solver->GetAgent(ai) = a;
+			solver->GetAgent(bi) = b;
+			solver->ComputeNewVelocities();
+			bool happens = false;
+			for (int i = 0; i < 2; i++)
+			{
+				Agent& anAgent = solver->GetAgent(id);
+				if (FVector2D{ anAgent.vx_new, anAgent.vy_new }.ContainsNaN())
+				{
+					happens = true;
+
+				}
+			}
+			if (happens)
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("YES"));
+			}
+			else
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("NO"));
+			}*/
 		}
 		unit->Execute_SetNewAvoidanceVelocity(pawn, FVector2D{ agent.vx_new, agent.vy_new });
 

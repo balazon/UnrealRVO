@@ -43,48 +43,50 @@ public class RVOTest : ModuleRules
 
     public bool LoadBobsMagic(TargetInfo Target)
     {
-        bool isLibrarySupported = false;
+        //bool isLibrarySupported = false;
 
-        if ((Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32))
-        {
-            isLibrarySupported = true;
-            System.Console.WriteLine("BOBMAGIC HERE!");
-
-
-            string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "" : "";
-            string LibrariesPath = Path.Combine(ThirdPartyPath, "BalaRVO", "Libraries");
-
-            string p = Path.Combine(LibrariesPath, "BalaRVO" + PlatformString + ".lib");
-            System.Console.WriteLine(p);
-            PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "BalaRVO" + PlatformString + ".lib"));
-            //BalaRVO
-            
-            //PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "MathFuncsLib.lib"));
-            
-        }
-        else if (Target.Platform == UnrealTargetPlatform.Android)
-        {
-            isLibrarySupported = true;
-            System.Console.WriteLine("BOBMAGIC android HERE!");
+        //if ((Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32))
+        //{
+        //    isLibrarySupported = true;
+        //    System.Console.WriteLine("BOBMAGIC HERE!");
 
 
-            //string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "x64" : "x86";
-            string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "" : "";
-            string LibrariesPath = Path.Combine(ThirdPartyPath, "BalaRVO", "Libraries");
+        //    string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "" : "";
+        //    string LibrariesPath = Path.Combine(ThirdPartyPath, "BalaRVO", "Libraries");
 
-            string p = Path.Combine(LibrariesPath, "libbalarvo" + PlatformString + ".a");
-            System.Console.WriteLine(p);
-            PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "libbalarvo" + PlatformString + ".a"));
-        }
+        //    string p = Path.Combine(LibrariesPath, "BalaRVO" + PlatformString + ".lib");
+        //    System.Console.WriteLine(p);
+        //    PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "BalaRVO" + PlatformString + ".lib"));
+        //    //BalaRVO
 
-        if (isLibrarySupported)
-        {
-            // Include path
-            PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "BalaRVO", "Includes"));
-        }
+        //    //PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "MathFuncsLib.lib"));
 
-        Definitions.Add(string.Format("WITH_BOBS_MAGIC_BINDING={0}", isLibrarySupported ? 1 : 0));
+        //}
+        //else if (Target.Platform == UnrealTargetPlatform.Android)
+        //{
+        //    isLibrarySupported = true;
+        //    System.Console.WriteLine("BOBMAGIC android HERE!");
 
-        return isLibrarySupported;
+
+        //    //string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "x64" : "x86";
+        //    string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "" : "";
+        //    string LibrariesPath = Path.Combine(ThirdPartyPath, "BalaRVO", "Libraries");
+
+        //    string p = Path.Combine(LibrariesPath, "libbalarvo" + PlatformString + ".a");
+        //    System.Console.WriteLine(p);
+        //    PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "libbalarvo" + PlatformString + ".a"));
+        //}
+
+        //if (isLibrarySupported)
+        //{
+        //    // Include path
+        //    PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "BalaRVO", "Includes"));
+        //}
+
+        //Definitions.Add(string.Format("WITH_BOBS_MAGIC_BINDING={0}", isLibrarySupported ? 1 : 0));
+
+        //return isLibrarySupported;
+
+        return true;
     }
 }

@@ -41,6 +41,8 @@ ABalaCharacter::ABalaCharacter(const FObjectInitializer& ObjectInitializer)
 	AvoidanceComponent = CreateDefaultSubobject<UAvoidanceComponent>(TEXT("AvoidanceComponent1"));
 	
 	mc = GetMovementComponent();
+
+	newVel = FVector{};
 }
 
 // Called when the game starts or when spawned
@@ -113,10 +115,10 @@ void ABalaCharacter::SetNearbyUnits_Implementation(const TArray<APawn*>& Units)
 void ABalaCharacter::SetNewAvoidanceVelocity_Implementation(FVector2D newVelocity)
 {
 	newVel = FVector{ newVelocity, 0.f };
-	/*mc->Velocity = FVector{ 0.f, 0.f, 0.f };
-	mc->*/
+	mc->Velocity = FVector{ newVelocity, 0.f };
+	
 	AvoidanceComponent->UpdateID();
-	//mc->UpdateComponentVelocity();
+	mc->UpdateComponentVelocity();
 }
 
 FVector2D ABalaCharacter::PreferredVelocity_Implementation()

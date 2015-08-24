@@ -14,7 +14,7 @@ UAvoidanceComponent::UAvoidanceComponent()
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
 
-	radius = 84.f;
+	radius = 42.f;
 
 	MaxVelocity = 600.f;
 
