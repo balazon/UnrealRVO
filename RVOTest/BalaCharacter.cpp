@@ -54,7 +54,7 @@ void ABalaCharacter::BeginPlay()
 void ABalaCharacter::Tick( float DeltaTime )
 {
 	Super::Tick( DeltaTime );
-	
+	mc->Velocity = newVel;
 }
 
 // Called to bind functionality to input
@@ -112,10 +112,11 @@ void ABalaCharacter::SetNearbyUnits_Implementation(const TArray<APawn*>& Units)
 
 void ABalaCharacter::SetNewAvoidanceVelocity_Implementation(FVector2D newVelocity)
 {
-	mc->Velocity = FVector{ 0.f, 0.f, 0.f };
-	
+	newVel = FVector{ newVelocity, 0.f };
+	/*mc->Velocity = FVector{ 0.f, 0.f, 0.f };
+	mc->*/
 	AvoidanceComponent->UpdateID();
-	mc->UpdateComponentVelocity();
+	//mc->UpdateComponentVelocity();
 }
 
 FVector2D ABalaCharacter::PreferredVelocity_Implementation()

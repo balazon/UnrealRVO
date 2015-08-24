@@ -81,5 +81,7 @@ protected:
 
 	TArray<APawn*> NearbyUnits;
 
+	FVector newVel;
+
 	
 };

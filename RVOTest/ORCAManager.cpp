@@ -46,6 +46,11 @@ void AORCAManager::Tick(float DeltaTime)
 
 
 	ORCASolver* solver = FBalaRVOModule::Solver();
+
+	int ai = 0;
+	int bi = 1;
+	Agent a = solver->GetAgent(ai);
+	Agent b = solver->GetAgent(bi);
 	solver->ComputeNewVelocities();
 
 	for (APawn* pawn : units)
@@ -57,6 +62,26 @@ void AORCAManager::Tick(float DeltaTime)
 
 		Agent& agent = solver->GetAgent(id);
 
+		if (FVector2D{ agent.vx_new, agent.vy_new }.ContainsNaN())
+		{
+			/*float x, y;
+			float vx, vy;
+			float r;
+			float vx_pref;
+			float vy_pref;
+			float vx_new;
+			float vy_new;
+			int nearbyAgents[CA_MAXNEARBY];
+			float ux[CA_MAXNEARBY];
+			float uy[CA_MAXNEARBY];
+			float maxVelocityMagnitude;
+			float maxAccMagnitude;
+			*/
+
+			
+			UE_LOG(LogRVOTest, Warning, TEXT("Agent a: x %f ,y %f, vx %f , vy %f, r %f , vx_p %f, vy_p %f, %f maxV, %f maxA"), a.x, a.y, a.vx, a.vy, a.r, a.vx_pref, a.vy_pref, a.maxVelocityMagnitude, a.maxAccMagnitude);
+			UE_LOG(LogRVOTest, Warning, TEXT("Agent b: x %f ,y %f, vx %f , vy %f, r %f , vx_p %f, vy_p %f, %f maxV, %f maxA"), b.x, b.y, b.vx, b.vy, b.r, b.vx_pref, b.vy_pref, b.maxVelocityMagnitude, b.maxAccMagnitude);
+		}
 		unit->Execute_SetNewAvoidanceVelocity(pawn, FVector2D{ agent.vx_new, agent.vy_new });
 
 		av->UpdateID();
