@@ -333,7 +333,7 @@ void CPLPSolver::Solve(float& resX, float& resY)
 		}
 		if (minDistSqr == 1e9)
 		{
-			SolveSafest(resX, resY);
+			SolveSafest(i, resX, resY);
 			return;
 		}
 	}
@@ -342,10 +342,10 @@ void CPLPSolver::Solve(float& resX, float& resY)
 	// but the average runtime should be O(n) if implementation is the same as in [De Berg et al. 2008]
 }
 
-void CPLPSolver::SolveSafest(float& resX, float& resY)
+void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 {
 	filter.clear();
-	createRandomOrder();
+	//createRandomOrder();
 
 	normalizeLinearConstraints();
 
@@ -355,12 +355,11 @@ void CPLPSolver::SolveSafest(float& resX, float& resY)
 	float ty2 = 0.f;
 
 	float d = 0.f;
-	resX = u;
-	resY = v;
+	
 
 	//printOrder(order);
 
-	for (int i = 0; i < constraints.size() / 3; i++)
+	for (int i = failIndex; i < constraints.size() / 3; i++)
 	{
 		if (pointSatisfiesConstraint(resX, resY, order[i], d))
 		{
@@ -503,20 +502,20 @@ void CPLPSolver::SolveSafest(float& resX, float& resY)
 				}
 
 				//circle centers projected towards the line
-				if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_LINEAR)
+				else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_LINEAR)
 				{
 					tx = constraints[pos] - constraints[pos2] * constraints[pos + 2];
 					ty = constraints[pos + 1] - constraints[pos2 + 1] * constraints[pos + 2];
 					updatePointIfBetter(tx, ty, i, resX, resY, d);
 				}
-				if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_CIRCLE)
+				else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_CIRCLE)
 				{
 					tx = constraints[pos2] - constraints[pos] * constraints[pos2 + 2];
 					ty = constraints[pos2 + 1] - constraints[pos + 1] * constraints[pos2 + 2];
 					updatePointIfBetter(tx, ty, i, resX, resY, d);
 				}
 
-				if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR)
+				else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR)
 				{
 					float A, B, C;
 					AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], A, B, C);
@@ -542,14 +541,14 @@ void CPLPSolver::SolveSafest(float& resX, float& resY)
 						updatePointIfBetter(tx, ty, i, resX, resY, d);
 					}
 
-					if (constraintTypes[jd] == CT_CIRCLE && constraintTypes[kd] == CT_CIRCLE)
+					else if (constraintTypes[jd] == CT_CIRCLE && constraintTypes[kd] == CT_CIRCLE)
 					{
 						IntersectCircleCircle(constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
 						updatePointIfBetter(tx, ty, i, resX, resY, d);
 						updatePointIfBetter(tx2, ty2, i, resX, resY, d);
 					}
 
-					if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_CIRCLE)
+					else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_CIRCLE)
 					{
 						AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
 						IntersectLineCircle(G1, H1, I1, constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
@@ -557,7 +556,7 @@ void CPLPSolver::SolveSafest(float& resX, float& resY)
 						updatePointIfBetter(tx2, ty2, i, resX, resY, d);
 					}
 
-					if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_CIRCLE && constraintTypes[kd] == CT_LINEAR)
+					else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_CIRCLE && constraintTypes[kd] == CT_LINEAR)
 					{
 						AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], G1, H1, I1);
 						IntersectLineCircle(G1, H1, I1, constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
@@ -565,7 +564,7 @@ void CPLPSolver::SolveSafest(float& resX, float& resY)
 						updatePointIfBetter(tx2, ty2, i, resX, resY, d);
 					}
 
-					if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_LINEAR)
+					else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_LINEAR)
 					{
 						AngleBisector(constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
 						IntersectLineCircle(G1, H1, I1, constraints[pos], constraints[pos + 1], constraints[pos + 2], tx, ty, tx2, ty2);

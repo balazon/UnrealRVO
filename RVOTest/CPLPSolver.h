@@ -38,7 +38,7 @@ public:
 	bool HasSolution();
 	void Solve(float& resX, float& resY);
 
-	void SolveSafest(float& resX, float& resY);
+	void SolveSafest(int failIndex, float& resX, float& resY);
 
 private:
 	//destination coordinates

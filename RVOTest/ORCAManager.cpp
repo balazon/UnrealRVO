@@ -51,7 +51,6 @@ void AORCAManager::Tick(float DeltaTime)
 	int bi = 1;
 	Agent a = solver->GetAgent(ai);
 	Agent b = solver->GetAgent(bi);
-	solver->ComputeNewVelocities();
 
 	for (int i = 0; i < units.Num(); i++)
 	{
@@ -61,6 +60,10 @@ void AORCAManager::Tick(float DeltaTime)
 			solver->SetAgentsNearby(j, i);
 		}
 	}
+
+	solver->ComputeNewVelocities();
+
+	
 
 	for (APawn* pawn : units)
 	{

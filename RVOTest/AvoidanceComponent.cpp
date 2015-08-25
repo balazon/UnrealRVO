@@ -89,6 +89,7 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 
 	for (APawn*  thepawn : unit->Execute_GetNearbyUnits(pawn))
 	{
+		
 		IAvoidanceUnit* n = Cast<IAvoidanceUnit>(thepawn);
 		if (n)
 		{

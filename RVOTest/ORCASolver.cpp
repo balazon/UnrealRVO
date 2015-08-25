@@ -52,7 +52,7 @@ bool ORCASolver::AreAgentsNeighbours(int i, int j)
 	Agent& b = agents[j];
 	for (int k = 0; k < CA_MAXNEARBY; k++)
 	{
-		if (a.nearbyAgents[k] == j && b.nearbyAgents[k] == i)
+		if (a.nearbyAgents[k] == j || b.nearbyAgents[k] == i)
 		{
 			return true;
 		}
@@ -267,6 +267,12 @@ void ORCASolver::ComputeNewVelocities()
 					C = -C;
 				}
 				solver.AddConstraintLinear(A, B, C);
+				if (isnan(A) || isnan(B) || isnan(C))
+				{
+					UE_LOG(LogRVOTest, Warning, TEXT("lin constr ABC: %f %f %f"), A, B, C);
+					computeSmallestChangeVectors(i, a.nearbyAgents[j]);
+
+				}
 			}
 		}
 

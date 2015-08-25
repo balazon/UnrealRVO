@@ -24,4 +24,4 @@ bool OrthogonalProjectionOfPointOnCircle(float u, float v, float r, float tx, fl
 // (A,B) and (D,E) must be normalized when passing it in
 // the resulting line's normal is (A,B) - (D,E)
 // this should work for parallel lines as well
-void AngleBisector(float A, float B, float C, float D, float E, float F, float& G, float& H, float& I);
+bool AngleBisector(float A, float B, float C, float D, float E, float F, float& G, float& H, float& I);

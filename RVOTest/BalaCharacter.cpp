@@ -120,7 +120,7 @@ void ABalaCharacter::SetNewAvoidanceVelocity_Implementation(FVector2D newVelocit
 	mc->Velocity = FVector{ newVelocity, 0.f };
 	
 	AvoidanceComponent->UpdateID();
-	mc->UpdateComponentVelocity();
+	/*mc->UpdateComponentVelocity();*/
 }
 
 FVector2D ABalaCharacter::PreferredVelocity_Implementation()
@@ -128,8 +128,10 @@ FVector2D ABalaCharacter::PreferredVelocity_Implementation()
 	FVector2D ToTarget{ CurrentTarget - FVector2D{ GetActorLocation() } };
 	
 	float sqrDist = ToTarget.SizeSquared();
-	if (sqrDist < 800.f)
+	if (sqrDist < 1600.f)
 		return FVector2D{};
+
+	float k = sqrDist < 10000.f ? sqrDist / 10000.f : 1.f;
 
 	FVector2D res = ToTarget / sqrtf(sqrDist) * AvoidanceComponent->MaxVelocity;
 
@@ -138,5 +140,5 @@ FVector2D ABalaCharacter::PreferredVelocity_Implementation()
 		UE_LOG(LogRVOTest, Warning, TEXT("ABalaCharacter:: PreferredV_impl , %f %f %f %f, res: %f %f"), sqrDist, AvoidanceComponent->MaxVelocity, ToTarget.X, ToTarget.Y, res.X, res.Y);
 	}
 
-	return ToTarget / sqrtf(sqrDist) * AvoidanceComponent->MaxVelocity;
+	return ToTarget / sqrtf(sqrDist) * AvoidanceComponent->MaxVelocity * k;
 }

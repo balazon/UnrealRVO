@@ -146,7 +146,7 @@ bool OrthogonalProjectionOfPointOnCircle(float u, float v, float r, float tx, fl
 }
 
 // (A,B) and (D,E) must be normalized
-void AngleBisector(float A, float B, float C, float D, float E, float F, float& G, float& H, float& I)
+bool AngleBisector(float A, float B, float C, float D, float E, float F, float& G, float& H, float& I)
 {
 	G = A - D;
 	H = B - E;
@@ -154,7 +154,7 @@ void AngleBisector(float A, float B, float C, float D, float E, float F, float& 
 
 	if (fabs(G) < EPS && fabs(H) < EPS)
 	{
-		UE_LOG(LogRVOTest, Warning, TEXT("anglebisectorBAM"));
-
+		return false;
 	}
+	return true;
 }
