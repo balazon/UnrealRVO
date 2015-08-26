@@ -3,9 +3,10 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "AvoidanceUnit.h"
+
 #include "AvoidanceComponent.generated.h"
 
+class AORCAManager;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RVOTEST_API UAvoidanceComponent : public UActorComponent
@@ -22,33 +23,40 @@ public:
 	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
-		
-	void UpdateID();
+	virtual void Activate(bool bReset = false) override;
 
-	UFUNCTION(BlueprintCallable, Category = Avoidance, meta = (DisplayName = "Get Current Avoidance Id"))
-	int32 GetCurrentID();
+	virtual void Deactivate() override;
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
-		float radius;
+	float radius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
-		float MaxVelocity;
+	float MaxVelocity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
-		float MaxAcceleration;
+	float MaxAcceleration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
+	FVector2D CurrentTarget;
+
+	//UFUNCTION(BlueprintCallable, Category = Avoidance, meta = (DisplayName = "Get Current Avoidance Id"))
+	//void 
+
+	//TODO move all of AvoidanceUnit, and BalaCharacter RVO here!
+
+	void SetNewAvoidanceVelocity(FVector2D newVelocity);
+
+	FVector2D GetPreferredVelocity();
+
+	APawn* pawn;
 
 protected:
 
-	IAvoidanceUnit* unit;
-	APawn* pawn;
+	
 	UPawnMovementComponent* mc;
 
-	ORCASolver* solver;
+	AORCAManager* manager;
 
-	int currentID;
-	int nextID;
-
-	
-	
-	
+	FVector2D newVel;
 };

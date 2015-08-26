@@ -3,8 +3,9 @@
 #include "RVOTest.h"
 #include "AvoidanceComponent.h"
 
+#include "EngineUtils.h"
 
-#include "BalaCharacter.h"
+#include "ORCAManager.h"
 
 // Sets default values for this component's properties
 UAvoidanceComponent::UAvoidanceComponent()
@@ -22,7 +23,44 @@ UAvoidanceComponent::UAvoidanceComponent()
 	
 	bAutoActivate = true;
 	// ...
+}
+
+void UAvoidanceComponent::Activate(bool bReset)
+{
+	Super::Activate();
 	
+	pawn = Cast<APawn>(GetOwner());
+
+	mc = pawn->GetMovementComponent();
+
+	
+	for (TActorIterator<AActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		AActor* actor = *ActorItr;
+		AORCAManager* orcaTest = Cast<AORCAManager>(actor);
+		if (orcaTest)
+		{
+			manager = orcaTest;
+			break;
+		}
+	}
+	if (!manager)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("You have to place an ORCAManager in the scene for the Aavoidance Component to work"));
+	}
+	else
+	{
+		manager->RegisterAvoidanceComponent(this);
+	}
+
+	
+}
+
+void UAvoidanceComponent::Deactivate()
+{
+	Super::Deactivate();
+	//unit is dead etc
+	manager->DeRegisterAvoidanceComponent(this);
 }
 
 
@@ -31,17 +69,40 @@ void UAvoidanceComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// ...
-	pawn = Cast<APawn>(GetOwner());
-	mc = pawn->GetMovementComponent();
+
 	
 
-	solver = FBalaRVOModule::Solver();
+	// ...
+}
 
-	currentID = solver->AddAgent();
-	nextID = currentID;
+void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity)
+{
+	UE_LOG(LogRVOTest, Warning, TEXT("uav component:: set new vel, old:  %f %f, new : %f %f %f"), mc->Velocity.X, mc->Velocity.Y, mc->Velocity.Z, newVelocity.X, newVelocity.Y);
 
-	unit = Cast<IAvoidanceUnit>(pawn);
+	mc->Velocity = FVector{ newVelocity, 0.f };
+	mc->UpdateComponentVelocity();
+
+	newVel = newVelocity;
+}
+
+FVector2D UAvoidanceComponent::GetPreferredVelocity()
+{
+	FVector2D ToTarget{ CurrentTarget - FVector2D{ pawn->GetActorLocation() } };
+
+	float sqrDist = ToTarget.SizeSquared();
+	if (sqrDist < 1600.f)
+		return FVector2D{};
+
+	float k = sqrDist < 10000.f ? sqrDist / 10000.f : 1.f;
+
+	FVector2D res = ToTarget / sqrtf(sqrDist) * MaxVelocity;
+
+	if (res.ContainsNaN())
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("UAvoidanceComp:: GetPreferredV , %f %f"), res.X, res.Y);
+	}
+
+	return ToTarget / sqrtf(sqrDist) * MaxVelocity * k;
 }
 
 
@@ -50,79 +111,8 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 	
-	
-
-	FVector loc = pawn->GetActorLocation();
-	FVector2D pos{ loc.X, loc.Y };
-	
-	FVector velocity = pawn->GetVelocity();
-	FVector2D vel{ velocity.X, velocity.Y };
-
-	MaxVelocity = mc->GetMaxSpeed();
-	
-	//FVector2D PreferredVelocity = unit->Execute_PreferredVelocity(pawn);
-	ABalaCharacter* bc = Cast<ABalaCharacter>(unit);
-	FVector2D PreferredVelocity = bc->PreferredVelocity_Implementation();
-	//TOODO! to stop smoothly -> desired speed, acceleration? (steering behavs)
-	
-	/*PreferredVelocity = target - pos;
-	float distSq = PreferredVelocity.SizeSquared();
-	if (distSq > 100.f)
-	{
-		PreferredVelocity.Normalize();
-		PreferredVelocity *= MaxVelocity;
-	}
-	else
-	{
-		PreferredVelocity = FVector2D{};
-	}*/
-	
-	// mc->GetMaxSpeed()
-	//if (uni)
-	if (PreferredVelocity.ContainsNaN())
-	{
-		UE_LOG(LogRVOTest, Warning, TEXT("AvoidanceComponent:: TICK , preferredvelocity: %f %f"), PreferredVelocity.X, PreferredVelocity.Y);
-		FVector2D PreferredVelocity2 = unit->Execute_PreferredVelocity(pawn);
-
-	}
-	Agent agent{ pos.X, pos.Y, vel.X, vel.Y, radius, PreferredVelocity.X, PreferredVelocity.Y, MaxVelocity, MaxAcceleration * DeltaTime };
-
-	for (APawn*  thepawn : unit->Execute_GetNearbyUnits(pawn))
-	{
-		
-		IAvoidanceUnit* n = Cast<IAvoidanceUnit>(thepawn);
-		if (n)
-		{
-			UAvoidanceComponent* ac = n->Execute_GetAvoidanceComponent(thepawn);
-			solver->SetAgentsNearby(currentID, ac->GetCurrentID());
-		}
-		
-	}
-	
-	solver->GetAgent(nextID) = agent;
-
-	//owner->
-	
-		//RVOTest::Solver()
-	
-	
-	//unit->Execute_DoDumbShit(pawn);
-	
+	SetNewAvoidanceVelocity(newVel);
 	// ...
 }
 
-//void UAvoidanceComponent::SetOwnerVelocity(float x, float y)
-//{
-//	mc->Velocity = FVector{ x, 0.f, y };
-//	
-//}
 
-void UAvoidanceComponent::UpdateID()
-{
-	currentID = nextID;
-}
-
-int32 UAvoidanceComponent::GetCurrentID()
-{
-	return currentID;
-}

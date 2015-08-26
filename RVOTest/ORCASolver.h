@@ -50,12 +50,14 @@ public:
 
 	//void setAgentState(float x, float y, float vx, float vy, float r, float vx_pref, float vy_pref)
 
-	//reference, because when an agent is removed, our id could change so that there are no gaps in array
-	Agent& GetAgent(int& id);
+	
+	Agent& GetAgent(int id);
+	
 
 	//returns id of agent
 	int AddAgent();
-	void RemoveAgent(int id);
+	//returns the id of the agent who gets the removed agent's id or -1 if nobody gets it
+	int RemoveAgent(int id);
 	void ClearAgents();
 
 	void SetParameters(float T);
@@ -76,7 +78,7 @@ private:
 	//compute u vector: u for A agent with respect to B, and -u for agent B with respect to A
 	//void computeSmallestChangeRequired
 
-	std::map<int, int> replacingIds;
+	
 
 	void computeSmallestChangeVectors(int i, int j);
 };

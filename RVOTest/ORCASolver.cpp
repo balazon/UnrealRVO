@@ -97,14 +97,8 @@ ORCASolver::~ORCASolver()
 }
 
 
-Agent& ORCASolver::GetAgent(int& id)
+Agent& ORCASolver::GetAgent(int id)
 {
-	if (replacingIds.count(id) > 0)
-	{
-		int oldid = id;
-		id = replacingIds[id];
-		replacingIds.erase(oldid);
-	}
 	return agents[id];
 }
 
@@ -118,10 +112,19 @@ int ORCASolver::AddAgent()
 	return num++;
 }
 
-void ORCASolver::RemoveAgent(int id)
+int ORCASolver::RemoveAgent(int id)
 {
-	replacingIds[num - 1] = id;
+	if (id >= num || id < 0)
+	{
+		return -1;
+	}
+	
 	num--;
+	if (id == num)
+	{
+		return -1;
+	}
+	return num;
 }
 
 void ORCASolver::ClearAgents()
@@ -234,9 +237,7 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 
 void ORCASolver::ComputeNewVelocities()
 {
-	replacingIds.clear();
 
-	//TODO not implemented yet - 
 	for (int i = 0; i < num; i++)
 	{
 		for (int j = i + 1; j < num; j++)
