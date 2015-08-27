@@ -154,6 +154,8 @@ bool AngleBisector(float A, float B, float C, float D, float E, float F, float& 
 
 	if (fabs(G) < EPS && fabs(H) < EPS)
 	{
+		UE_LOG(LogRVOTest, Warning, TEXT("anglebis: %f %f %f %f %f %f"), A, B, C, D, E, F);
+
 		return false;
 	}
 	return true;

@@ -13,31 +13,43 @@ class UAvoidanceComponent;
 #define NE_YCOUNT (200)
 #define NE_XMIN (-8000.f)
 #define NE_YMIN (-8000.f)
-#define NE_SIDE (84.f)
-#define NE_MAXUNITS_IN_CELL (4)
+#define NE_SIDE (168.f)
+#define NE_MAXUNITS_IN_CELL (16)
+#define NE_INVALID_AGENT_ID (65535)
+
+struct CloserAgentComparator
+{
+	ORCASolver* solver;
+	uint16 agentId;
+	bool operator()(uint16 leftId, uint16 rightId);
+
+};
 
 struct Grid
 {
-	uint8 AgentIds[NE_XCOUNT * NE_YCOUNT * NE_MAXUNITS_IN_CELL];
-
-	//fill everything with -1 : invalid agent id
-	void init();
+	//fill everything with the invalid agent id:  NE_INVALID_AGENT_ID
+	Grid();
+	
+	uint16 AgentIds[NE_XCOUNT * NE_YCOUNT * NE_MAXUNITS_IN_CELL];
 
 	void clear();
 
-	void setAgent(float x, float y, uint8 id);
+	void setAgent(float x, float y, uint16 id);
 
-	void setAgentNeighbours(uint8 id, ORCASolver* solver);
+	void setAgentNeighbours(uint16 id, ORCASolver* solver);
 
-	uint32 GetIndex(int xcoord, int ycoord);
+	size_t GetIndex(int xcoord, int ycoord);
+	size_t GetIndexf(float x, float y);
 
-	uint32 Indexes[CA_MAXAGENTS];
+	size_t Indexes[CA_MAXAGENTS];
 
 	int num;
 	
 	
-
+	CloserAgentComparator comp;
 };
+
+
 
 /**
  * 
@@ -70,6 +82,7 @@ protected:
 	TArray<UAvoidanceComponent*> units;
 
 	Grid grid;
+	
 	
 };
 

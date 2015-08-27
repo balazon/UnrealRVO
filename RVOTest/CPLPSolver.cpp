@@ -496,9 +496,13 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 
 				if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_CIRCLE)
 				{
-					IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
-					updatePointIfBetter(tx, ty, i, resX, resY, d);
-					updatePointIfBetter(tx2, ty2, i, resX, resY, d);
+					bool intersects = IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
+					if (intersects)
+					{
+						updatePointIfBetter(tx, ty, i, resX, resY, d);
+						updatePointIfBetter(tx2, ty2, i, resX, resY, d);
+					}
+					
 				}
 
 				//circle centers projected towards the line
@@ -518,9 +522,12 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 				else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR)
 				{
 					float A, B, C;
-					AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], A, B, C);
-					OrthogonalProjectionOfPointOnLine(A, B, C, u, v, tx, ty);
-					updatePointIfBetter(tx, ty, i, resX, resY, d);
+					bool hasBisector = AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], A, B, C);
+					if (hasBisector)
+					{
+						OrthogonalProjectionOfPointOnLine(A, B, C, u, v, tx, ty);
+						updatePointIfBetter(tx, ty, i, resX, resY, d);
+					}
 				}
 
 				for (int k = j + 1; k < i; k++)
@@ -535,41 +542,70 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 					float G1, H1, I1, G2, H2, I2;
 					if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_LINEAR)
 					{
-						AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
-						AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], G2, H2, I2);
-						IntersectLines(G1, H1, I1, G2, H2, I2, tx, ty);
-						updatePointIfBetter(tx, ty, i, resX, resY, d);
+						bool hasBisector = AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1)
+							&& AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], G2, H2, I2);
+						if (hasBisector)
+						{
+							bool intersects = IntersectLines(G1, H1, I1, G2, H2, I2, tx, ty);
+							if (intersects)
+							{
+								updatePointIfBetter(tx, ty, i, resX, resY, d);
+							}
+						}
 					}
 
 					else if (constraintTypes[jd] == CT_CIRCLE && constraintTypes[kd] == CT_CIRCLE)
 					{
-						IntersectCircleCircle(constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
-						updatePointIfBetter(tx, ty, i, resX, resY, d);
-						updatePointIfBetter(tx2, ty2, i, resX, resY, d);
+						
+						bool intersects = IntersectCircleCircle(constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
+						if (intersects)
+						{
+							updatePointIfBetter(tx, ty, i, resX, resY, d);
+							updatePointIfBetter(tx2, ty2, i, resX, resY, d);
+						}
+						
 					}
 
 					else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_CIRCLE)
 					{
-						AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
-						IntersectLineCircle(G1, H1, I1, constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
-						updatePointIfBetter(tx, ty, i, resX, resY, d);
-						updatePointIfBetter(tx2, ty2, i, resX, resY, d);
+						bool hasBisector = AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
+						if (hasBisector)
+						{
+							bool intersects = IntersectLineCircle(G1, H1, I1, constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
+							if (intersects)
+							{
+								updatePointIfBetter(tx, ty, i, resX, resY, d);
+								updatePointIfBetter(tx2, ty2, i, resX, resY, d);
+							}
+						}
 					}
 
 					else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_CIRCLE && constraintTypes[kd] == CT_LINEAR)
 					{
-						AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], G1, H1, I1);
-						IntersectLineCircle(G1, H1, I1, constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
-						updatePointIfBetter(tx, ty, i, resX, resY, d);
-						updatePointIfBetter(tx2, ty2, i, resX, resY, d);
+						bool hasBisector = AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], G1, H1, I1);
+						if (hasBisector)
+						{
+							bool intersects = IntersectLineCircle(G1, H1, I1, constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
+							if (intersects)
+							{
+								updatePointIfBetter(tx, ty, i, resX, resY, d);
+								updatePointIfBetter(tx2, ty2, i, resX, resY, d);
+							}
+						}
 					}
 
 					else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_LINEAR)
 					{
-						AngleBisector(constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
-						IntersectLineCircle(G1, H1, I1, constraints[pos], constraints[pos + 1], constraints[pos + 2], tx, ty, tx2, ty2);
-						updatePointIfBetter(tx, ty, i, resX, resY, d);
-						updatePointIfBetter(tx2, ty2, i, resX, resY, d);
+						bool hasBisector = AngleBisector(constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
+						if (hasBisector)
+						{
+							bool intersects = IntersectLineCircle(G1, H1, I1, constraints[pos], constraints[pos + 1], constraints[pos + 2], tx, ty, tx2, ty2);
+							if (intersects)
+							{
+								updatePointIfBetter(tx, ty, i, resX, resY, d);
+								updatePointIfBetter(tx2, ty2, i, resX, resY, d);
+							}
+						}
 					}
 
 

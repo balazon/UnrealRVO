@@ -12,6 +12,8 @@
 
 #include "CPLPSolver.h"
 
+#define EPS (0.001)
+
 CPLPSolver solver;
 
 Agent::Agent() : Agent{ 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f }
@@ -48,15 +50,19 @@ void ORCASolver::SetAgentsNearby(int i, int j)
 
 bool ORCASolver::AreAgentsNeighbours(int i, int j)
 {
+	UE_LOG(LogRVOTest, Warning, TEXT("agentsneighbours %d %d"), i, j);
+
 	Agent& a = agents[i];
 	Agent& b = agents[j];
 	for (int k = 0; k < CA_MAXNEARBY; k++)
 	{
 		if (a.nearbyAgents[k] == j || b.nearbyAgents[k] == i)
 		{
+			UE_LOG(LogRVOTest, Warning, TEXT("agentsneighbours true"));
 			return true;
 		}
 	}
+	UE_LOG(LogRVOTest, Warning, TEXT("agentsneighbours false"));
 	return false;
 }
 
@@ -155,6 +161,14 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 
 
 	IntersectCircleCircle(ABx, ABy, R, Ox, Oy, sqrtf(Ox * Ox + Oy * Oy), Px, Py, Qx, Qy);
+
+	if (isnan(Px) || isnan(Py) || isnan(Qx) || isnan(Qy))
+	{
+
+		IntersectCircleCircle(ABx, ABy, R, Ox, Oy, sqrtf(Ox * Ox + Oy * Oy), Px, Py, Qx, Qy);
+	}
+	UE_LOG(LogRVOTest, Warning, TEXT("computeSmallest, P( %f , %f )  Q( %f,  %f )"), Px, Py, Qx, Qy);
+
 
 	if (-ABy * Px + ABx * Py > 0.f)
 	{
@@ -255,7 +269,7 @@ void ORCASolver::ComputeNewVelocities()
 		{
 			float ux = a.ux[j];
 			float uy = a.uy[j];
-			if (a.nearbyAgents[j] != -1 && (ux != 0.f || uy != 0.f))
+			if (a.nearbyAgents[j] != -1 && (fabs(ux) > EPS || fabs(uy) > EPS))
 			{
 				float A = ux;
 				float B = uy;
@@ -268,7 +282,7 @@ void ORCASolver::ComputeNewVelocities()
 					C = -C;
 				}
 				solver.AddConstraintLinear(A, B, C);
-				if (isnan(A) || isnan(B) || isnan(C))
+				if (isnan(A) || isnan(B) || isnan(C) || fabs(A) < EPS && fabs(B) < EPS)
 				{
 					UE_LOG(LogRVOTest, Warning, TEXT("lin constr ABC: %f %f %f"), A, B, C);
 					computeSmallestChangeVectors(i, a.nearbyAgents[j]);
