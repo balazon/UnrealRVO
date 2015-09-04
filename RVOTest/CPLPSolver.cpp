@@ -21,11 +21,13 @@
 #include "MathUtils.h"
 
 
-CPLPSolver::CPLPSolver()
+CPLPSolver::CPLPSolver() : debug{false}
 {
 	constraints.reserve(30);
 	constraintTypes.reserve(30);
 	order.reserve(30);
+
+	
 }
 
 CPLPSolver::~CPLPSolver()
@@ -101,12 +103,12 @@ bool CPLPSolver::pointSatisfiesConstraint(float tx, float ty, int n, float d)
 {
 	if (filter.count(n) == 0)
 	{
-		if (constraintTypes[n] == CT_LINEAR && constraints[n * 3] * tx + constraints[n * 3 + 1] * ty > constraints[n * 3 + 2] + d) // + EPS  to the end?)
+		if (constraintTypes[n] == CT_LINEAR && constraints[n * 3] * tx + constraints[n * 3 + 1] * ty + EPS > constraints[n * 3 + 2] + d ) // + EPS  to the end?)
 		{
 			return false;
 		}
 		else if (constraintTypes[n] == CT_CIRCLE &&
-			(tx - constraints[n * 3]) * (tx - constraints[n * 3]) + (ty - constraints[n * 3 + 1]) * (ty - constraints[n * 3 + 1]) > constraints[n * 3 + 2] * constraints[n * 3 + 2])
+			(tx - constraints[n * 3]) * (tx - constraints[n * 3]) + (ty - constraints[n * 3 + 1]) * (ty - constraints[n * 3 + 1]) + EPS > constraints[n * 3 + 2] * constraints[n * 3 + 2])
 		{
 			return false;
 		}
@@ -117,7 +119,7 @@ bool CPLPSolver::pointSatisfiesConstraint(float tx, float ty, int n, float d)
 
 bool CPLPSolver::pointSatisfiesConstraints(float tx, float ty, int n, float d, bool onlyCircles)
 {
-	for (int j = 0; j < n; j++)
+	for (int j = 0; j <= n; j++)
 	{
 		if (onlyCircles && constraintTypes[order[j]] == CT_LINEAR)
 		{
@@ -150,9 +152,9 @@ void CPLPSolver::normalizeLinearConstraints()
 			continue;
 		}
 		float lrec = 1.f / sqrtf(constraints[3 * i] * constraints[3 * i] + constraints[3 * i + 1] * constraints[3 * i + 1]);
-		if (isnan(lrec))
+		if (BMU::isnanf(lrec))
 		{
-			std::cout << "BAM\n";
+			std::cout << "normalize BAM\n";
 		}
 		constraints[3 * i] *= lrec;
 		constraints[3 * i + 1] *= lrec;
@@ -188,7 +190,7 @@ void CPLPSolver::updatePointIfBetter(float x, float y, int n, float& resX, float
 			resX = x;
 			resY = y;
 			d = td;
-			if (isnan(resX) || isnan(resY))
+			if (BMU::isnanf(resX) || BMU::isnanf(resY))
 			{
 				UE_LOG(LogRVOTest, Warning, TEXT("BAM in: updatepointifbetter"));
 			}
@@ -213,6 +215,30 @@ void CPLPSolver::Solve(float& resX, float& resY)
 
 	//printOrder(order);
 
+	if (debug)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("u v : %f %f  "), u, v);
+
+		UE_LOG(LogRVOTest, Warning, TEXT("All constraints: "));
+
+		for (int i = 0; i < constraints.size() / 3; i++)
+		{
+			int id = order[i];
+			int pos = id * 3;
+			if (constraintTypes[id] == CT_LINEAR)
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("%d lin: %f %f %f "), id, constraints[pos], constraints[pos + 1], constraints[pos + 2]);
+			}
+			else
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("%d cir: %f %f %f "), id, constraints[pos], constraints[pos + 1], constraints[pos + 2]);
+			}
+			
+		}
+	}
+	
+	
+
 	for (int i = 0; i < constraints.size() / 3; i++)
 	{
 		if (pointSatisfiesConstraint(resX, resY, order[i]))
@@ -222,30 +248,44 @@ void CPLPSolver::Solve(float& resX, float& resY)
 		int id = order[i];
 		int pos = id * 3;
 
+		
+		
+
+		bool first = false;
 		if (constraintTypes[id] == CT_LINEAR)
 		{
-			OrthogonalProjectionOfPointOnLine(constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
+			BMU::OrthogonalProjectionOfPointOnLine(constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
+			first = true;
 		}
 		else
 		{
-			OrthogonalProjectionOfPointOnCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
+			first = BMU::OrthogonalProjectionOfPointOnCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
+			if (!first)
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("%d. constr : %f %f %f  "), id, constraints[pos], constraints[pos + 1], constraints[pos + 2]);
+			}
 		}
+		
 		filter.clear();
 		filter.insert(id);
 
-		float minDistSqr = 1e9;
+		feasible = false;
+		float minDistSqr = -1.f;
 		float tdist;
-		if (pointSatisfiesConstraints(tx, ty, i))
+		
+		if (first && pointSatisfiesConstraints(tx, ty, i))
 		{
+			feasible = true;
 			tdist = (tx - u) * (tx - u) + (ty - v) * (ty - v);
 			minDistSqr = tdist;
 			resX = tx;
 			resY = ty;
-			if (isnan(resX) || isnan(resY))
+			if (BMU::isnanf(resX) || BMU::isnanf(resY))
 			{
-				UE_LOG(LogRVOTest, Warning, TEXT("params: %f %f %f %f %f"), constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
+				UE_LOG(LogRVOTest, Warning, TEXT("cplpsolver::solve  %f %f %f %f %f"), constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
 			}
 		}
+		
 
 
 		for (int j = 0; j < i; j++)
@@ -261,20 +301,20 @@ void CPLPSolver::Solve(float& resX, float& resY)
 			bool hasIntersection = false;
 			if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR)
 			{
-				hasIntersection = IntersectLines(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty);
+				hasIntersection = BMU::IntersectLines(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty);
 				onePoint = true;
 			}
 			else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_CIRCLE)
 			{
-				hasIntersection = IntersectLineCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
+				hasIntersection = BMU::IntersectLineCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
 			}
 			else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_LINEAR)
 			{
-				hasIntersection = IntersectLineCircle(constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], constraints[pos], constraints[pos + 1], constraints[pos + 2], tx, ty, tx2, ty2);
+				hasIntersection = BMU::IntersectLineCircle(constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], constraints[pos], constraints[pos + 1], constraints[pos + 2], tx, ty, tx2, ty2);
 			}
 			else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_CIRCLE)
 			{
-				hasIntersection = IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
+				hasIntersection = BMU::IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
 				if (!hasIntersection)
 				{
 					feasible = false;
@@ -286,12 +326,13 @@ void CPLPSolver::Solve(float& resX, float& resY)
 				if (pointSatisfiesConstraints(tx, ty, i))
 				{
 					tdist = (tx - u) * (tx - u) + (ty - v) * (ty - v);
-					if (tdist < minDistSqr)
+					if (!feasible || tdist < minDistSqr)
 					{
+						feasible = true;
 						resX = tx;
 						resY = ty;
 						minDistSqr = tdist;
-						if (isnan(resX) || isnan(resY))
+						if (BMU::isnanf(resX) || BMU::isnanf(resY))
 						{
 							if (constraintTypes[id] == CT_LINEAR)
 							{
@@ -310,12 +351,13 @@ void CPLPSolver::Solve(float& resX, float& resY)
 				if (!onePoint && pointSatisfiesConstraints(tx2, ty2, i))
 				{
 					tdist = (tx2 - u) * (tx2 - u) + (ty2 - v) * (ty2 - v);
-					if (tdist < minDistSqr)
+					if (!feasible || tdist < minDistSqr)
 					{
+						feasible = true;
 						resX = tx2;
 						resY = ty2;
 						minDistSqr = tdist;
-						if (isnan(resX) || isnan(resY))
+						if (BMU::isnanf(resX) || BMU::isnanf(resY))
 						{
 							if (constraintTypes[jd] == CT_LINEAR)
 							{
@@ -331,7 +373,7 @@ void CPLPSolver::Solve(float& resX, float& resY)
 				}
 			}
 		}
-		if (minDistSqr == 1e9)
+		if (!feasible)
 		{
 			SolveSafest(i, resX, resY);
 			return;
@@ -368,26 +410,31 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 		int id = order[i];
 		int pos = id * 3;
 
+		bool first = false;
 		if (constraintTypes[id] == CT_LINEAR)
 		{
-			OrthogonalProjectionOfPointOnLine(constraints[pos], constraints[pos + 1], constraints[pos + 2] + d, u, v, tx, ty);
+			BMU::OrthogonalProjectionOfPointOnLine(constraints[pos], constraints[pos + 1], constraints[pos + 2] + d, u, v, tx, ty);
+			first = true;
 		}
 		else
 		{
-			OrthogonalProjectionOfPointOnCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
+			first = BMU::OrthogonalProjectionOfPointOnCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
 		}
 		filter.clear();
 		filter.insert(id);
 
-		float minDistSqr = 1e9;
+		
+		bool solvable = false;
+		float minDistSqr = -1.f;
 		float tdist;
-		if (pointSatisfiesConstraints(tx, ty, i, d))
+		if (first && pointSatisfiesConstraints(tx, ty, i, d))
 		{
+			solvable = true;
 			tdist = (tx - u) * (tx - u) + (ty - v) * (ty - v);
 			minDistSqr = tdist;
 			resX = tx;
 			resY = ty;
-			if (isnan(resX) || isnan(resY))
+			if (BMU::isnanf(resX) || BMU::isnanf(resY))
 			{
 				UE_LOG(LogRVOTest, Warning, TEXT("params: %f %f %f %f %f"), constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
 			}
@@ -408,20 +455,20 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 			bool hasIntersection = false;
 			if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR)
 			{
-				hasIntersection = IntersectLines(constraints[pos], constraints[pos + 1], constraints[pos + 2] + d, constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2] + d, tx, ty);
+				hasIntersection = BMU::IntersectLines(constraints[pos], constraints[pos + 1], constraints[pos + 2] + d, constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2] + d, tx, ty);
 				onePoint = true;
 			}
 			else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_CIRCLE)
 			{
-				hasIntersection = IntersectLineCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2] + d, constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
+				hasIntersection = BMU::IntersectLineCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2] + d, constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
 			}
 			else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_LINEAR)
 			{
-				hasIntersection = IntersectLineCircle(constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2] + d, constraints[pos], constraints[pos + 1], constraints[pos + 2], tx, ty, tx2, ty2);
+				hasIntersection = BMU::IntersectLineCircle(constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2] + d, constraints[pos], constraints[pos + 1], constraints[pos + 2], tx, ty, tx2, ty2);
 			}
 			else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_CIRCLE)
 			{
-				hasIntersection = IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
+				hasIntersection = BMU::IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
 				if (!hasIntersection)
 				{
 					feasible = false;
@@ -433,12 +480,13 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 				if (pointSatisfiesConstraints(tx, ty, i, d))
 				{
 					tdist = (tx - u) * (tx - u) + (ty - v) * (ty - v);
-					if (tdist < minDistSqr)
+					if (!solvable || tdist < minDistSqr)
 					{
+						solvable = true;
 						resX = tx;
 						resY = ty;
 						minDistSqr = tdist;
-						if (isnan(resX) || isnan(resY))
+						if (BMU::isnanf(resX) || BMU::isnanf(resY))
 						{
 							if (constraintTypes[id] == CT_LINEAR)
 							{
@@ -458,12 +506,13 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 				if (!onePoint && pointSatisfiesConstraints(tx2, ty2, i, d))
 				{
 					tdist = (tx2 - u) * (tx2 - u) + (ty2 - v) * (ty2 - v);
-					if (tdist < minDistSqr)
+					if (!solvable || tdist < minDistSqr)
 					{
+						solvable = true;
 						resX = tx2;
 						resY = ty2;
 						minDistSqr = tdist;
-						if (isnan(resX) || isnan(resY))
+						if (BMU::isnanf(resX) || BMU::isnanf(resY))
 						{
 							if (constraintTypes[jd] == CT_LINEAR)
 							{
@@ -479,7 +528,8 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 				}
 			}
 		}
-		if (minDistSqr == 1e9)
+
+		if (!solvable)
 		{
 			//calculate new d
 
@@ -496,7 +546,7 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 
 				if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_CIRCLE)
 				{
-					bool intersects = IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
+					bool intersects = BMU::IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
 					if (intersects)
 					{
 						updatePointIfBetter(tx, ty, i, resX, resY, d);
@@ -506,6 +556,8 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 				}
 
 				//circle centers projected towards the line
+				//(for (u, v, r) circle and a normalized (A, B, C) line this point is: (u,v) - r * (A, B)
+				//TODO investigate possible d value that would make the line touch the circle (is it enough or not)
 				else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_LINEAR)
 				{
 					tx = constraints[pos] - constraints[pos2] * constraints[pos + 2];
@@ -522,10 +574,10 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 				else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR)
 				{
 					float A, B, C;
-					bool hasBisector = AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], A, B, C);
+					bool hasBisector = BMU::AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], A, B, C);
 					if (hasBisector)
 					{
-						OrthogonalProjectionOfPointOnLine(A, B, C, u, v, tx, ty);
+						BMU::OrthogonalProjectionOfPointOnLine(A, B, C, u, v, tx, ty);
 						updatePointIfBetter(tx, ty, i, resX, resY, d);
 					}
 				}
@@ -542,11 +594,11 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 					float G1, H1, I1, G2, H2, I2;
 					if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_LINEAR)
 					{
-						bool hasBisector = AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1)
-							&& AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], G2, H2, I2);
+						bool hasBisector = BMU::AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1)
+							&& BMU::AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], G2, H2, I2);
 						if (hasBisector)
 						{
-							bool intersects = IntersectLines(G1, H1, I1, G2, H2, I2, tx, ty);
+							bool intersects = BMU::IntersectLines(G1, H1, I1, G2, H2, I2, tx, ty);
 							if (intersects)
 							{
 								updatePointIfBetter(tx, ty, i, resX, resY, d);
@@ -557,7 +609,7 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 					else if (constraintTypes[jd] == CT_CIRCLE && constraintTypes[kd] == CT_CIRCLE)
 					{
 						
-						bool intersects = IntersectCircleCircle(constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
+						bool intersects = BMU::IntersectCircleCircle(constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
 						if (intersects)
 						{
 							updatePointIfBetter(tx, ty, i, resX, resY, d);
@@ -568,10 +620,10 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 
 					else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_CIRCLE)
 					{
-						bool hasBisector = AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
+						bool hasBisector = BMU::AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
 						if (hasBisector)
 						{
-							bool intersects = IntersectLineCircle(G1, H1, I1, constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
+							bool intersects = BMU::IntersectLineCircle(G1, H1, I1, constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
 							if (intersects)
 							{
 								updatePointIfBetter(tx, ty, i, resX, resY, d);
@@ -582,10 +634,10 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 
 					else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_CIRCLE && constraintTypes[kd] == CT_LINEAR)
 					{
-						bool hasBisector = AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], G1, H1, I1);
+						bool hasBisector = BMU::AngleBisector(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], G1, H1, I1);
 						if (hasBisector)
 						{
-							bool intersects = IntersectLineCircle(G1, H1, I1, constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
+							bool intersects = BMU::IntersectLineCircle(G1, H1, I1, constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
 							if (intersects)
 							{
 								updatePointIfBetter(tx, ty, i, resX, resY, d);
@@ -596,10 +648,10 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 
 					else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_LINEAR)
 					{
-						bool hasBisector = AngleBisector(constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
+						bool hasBisector = BMU::AngleBisector(constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], G1, H1, I1);
 						if (hasBisector)
 						{
-							bool intersects = IntersectLineCircle(G1, H1, I1, constraints[pos], constraints[pos + 1], constraints[pos + 2], tx, ty, tx2, ty2);
+							bool intersects = BMU::IntersectLineCircle(G1, H1, I1, constraints[pos], constraints[pos + 1], constraints[pos + 2], tx, ty, tx2, ty2);
 							if (intersects)
 							{
 								updatePointIfBetter(tx, ty, i, resX, resY, d);

@@ -81,6 +81,8 @@ private:
 	
 
 	void computeSmallestChangeVectors(int i, int j);
+
+	
 };
 
 

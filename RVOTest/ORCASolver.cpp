@@ -50,7 +50,7 @@ void ORCASolver::SetAgentsNearby(int i, int j)
 
 bool ORCASolver::AreAgentsNeighbours(int i, int j)
 {
-	UE_LOG(LogRVOTest, Warning, TEXT("agentsneighbours %d %d"), i, j);
+	UE_LOG(LogRVOTest, VeryVerbose, TEXT("agentsneighbours %d %d"), i, j);
 
 	Agent& a = agents[i];
 	Agent& b = agents[j];
@@ -58,11 +58,11 @@ bool ORCASolver::AreAgentsNeighbours(int i, int j)
 	{
 		if (a.nearbyAgents[k] == j || b.nearbyAgents[k] == i)
 		{
-			UE_LOG(LogRVOTest, Warning, TEXT("agentsneighbours true"));
+			UE_LOG(LogRVOTest, VeryVerbose, TEXT("agentsneighbours true"));
 			return true;
 		}
 	}
-	UE_LOG(LogRVOTest, Warning, TEXT("agentsneighbours false"));
+	UE_LOG(LogRVOTest, VeryVerbose, TEXT("agentsneighbours false"));
 	return false;
 }
 
@@ -160,15 +160,16 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 	//bool IntersectCircleCircle(float u1, float v1, float r1, float u2, float v2, float r2, float& x1, float& y1, float& x2, float& y2)
 
 
-	IntersectCircleCircle(ABx, ABy, R, Ox, Oy, sqrtf(Ox * Ox + Oy * Oy), Px, Py, Qx, Qy);
+	BMU::IntersectCircleCircle(ABx, ABy, R, Ox, Oy, sqrtf(Ox * Ox + Oy * Oy), Px, Py, Qx, Qy);
 
-	if (isnan(Px) || isnan(Py) || isnan(Qx) || isnan(Qy))
+	if (BMU::isnanf(Px) || BMU::isnanf(Py) || BMU::isnanf(Qx) || BMU::isnanf(Qy))
 	{
 
-		IntersectCircleCircle(ABx, ABy, R, Ox, Oy, sqrtf(Ox * Ox + Oy * Oy), Px, Py, Qx, Qy);
+		BMU::IntersectCircleCircle(ABx, ABy, R, Ox, Oy, sqrtf(Ox * Ox + Oy * Oy), Px, Py, Qx, Qy);
 	}
-	UE_LOG(LogRVOTest, Warning, TEXT("computeSmallest, P( %f , %f )  Q( %f,  %f )"), Px, Py, Qx, Qy);
+	UE_LOG(LogRVOTest, VeryVerbose, TEXT("computeSmallest, P( %f , %f )  Q( %f,  %f )"), Px, Py, Qx, Qy);
 
+	
 
 	if (-ABy * Px + ABx * Py > 0.f)
 	{
@@ -229,16 +230,16 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 	{
 		if (-ABy * vrelx + ABx * vrely > 0.f)
 		{
-			OrthogonalProjectionOfPointOnLine(Nqx, Nqy, 0.f, vrelx, vrely, Sx, Sy);
+			BMU::OrthogonalProjectionOfPointOnLine(Nqx, Nqy, 0.f, vrelx, vrely, Sx, Sy);
 		}
 		else
 		{
-			OrthogonalProjectionOfPointOnLine(Npx, Npy, 0.f, vrelx, vrely, Sx, Sy);
+			BMU::OrthogonalProjectionOfPointOnLine(Npx, Npy, 0.f, vrelx, vrely, Sx, Sy);
 		}
 	}
 	else if ((vrelx - Ox) * (vrelx - Ox) + (vrely - Oy) * (vrely - Oy) < r * r)
 	{
-		OrthogonalProjectionOfPointOnCircle(Ox, Oy, r, vrelx, vrely, Sx, Sy);
+		BMU::OrthogonalProjectionOfPointOnCircle(Ox, Oy, r, vrelx, vrely, Sx, Sy);
 	}
 	else
 	{
@@ -263,13 +264,14 @@ void ORCASolver::ComputeNewVelocities()
 		}
 		Agent& a = agents[i];
 		solver.Reset();
-		UE_LOG(LogRVOTest, Warning, TEXT("vxpref %f %f"), a.vx_pref, a.vy_pref);
+		UE_LOG(LogRVOTest, VeryVerbose, TEXT("vxpref %f %f"), a.vx_pref, a.vy_pref);
 		solver.SetDestination(a.vx_pref, a.vy_pref);
 		for (int j = 0; j < CA_MAXNEARBY; j++)
 		{
 			float ux = a.ux[j];
 			float uy = a.uy[j];
-			if (a.nearbyAgents[j] != -1 && (fabs(ux) > EPS || fabs(uy) > EPS))
+			//a.nearbyAgents[j] == i shouldn't happen but just to be safe
+			if (a.nearbyAgents[j] != -1 && (fabs(ux) > EPS || fabs(uy) > EPS) && a.nearbyAgents[j] != i)
 			{
 				float A = ux;
 				float B = uy;
@@ -282,26 +284,57 @@ void ORCASolver::ComputeNewVelocities()
 					C = -C;
 				}
 				solver.AddConstraintLinear(A, B, C);
-				if (isnan(A) || isnan(B) || isnan(C) || fabs(A) < EPS && fabs(B) < EPS)
+				UE_LOG(LogRVOTest, VeryVerbose, TEXT("i, j: %d %d"), i, j);
+
+				UE_LOG(LogRVOTest, VeryVerbose, TEXT("lin constr ABC: %f %f %f"), A, B, C);
+				if (BMU::isnanf(A) || BMU::isnanf(B) || BMU::isnanf(C) || fabs(A) < EPS && fabs(B) < EPS)
 				{
-					UE_LOG(LogRVOTest, Warning, TEXT("lin constr ABC: %f %f %f"), A, B, C);
+					UE_LOG(LogRVOTest, VeryVerbose, TEXT("lin constr ABC: %f %f %f"), A, B, C);
 					computeSmallestChangeVectors(i, a.nearbyAgents[j]);
 
 				}
 			}
 		}
 
-		solver.AddConstraintCircle(a.vx, a.vy, a.maxAccMagnitude);
-		solver.AddConstraintCircle(0.f, 0.f, a.maxVelocityMagnitude);
+		/*if (a.vx < EPS && a.vy < EPS)
+		{
+			
+			solver.AddConstraintCircle(0.f, 0.f, fminf(a.maxAccMagnitude, a.maxVelocityMagnitude));
+		}
+		else
+		{*/
+			solver.AddConstraintCircle(a.vx, a.vy, a.maxAccMagnitude);
+			solver.AddConstraintCircle(0.f, 0.f, a.maxVelocityMagnitude);
+		//}
+		
 
 		solver.Solve(a.vx_new, a.vy_new);
-		if (isnan(a.vx_new) || isnan(a.vy_new))
+
+		if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2 * EPS))
+		{
+			UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);
+			solver.debug = true;
+			solver.Solve(a.vx_new, a.vy_new);
+			solver.debug = false;
+		}
+
+		if ((a.vx_new - a.vx) * (a.vx_new - a.vx) + (a.vy_new - a.vy) * (a.vy_new - a.vy) > a.maxAccMagnitude * (a.maxAccMagnitude + 2 * EPS))
+		{
+			UE_LOG(LogRVOTest, Warning, TEXT("a.v %f %f, a.vnew %f %f, a.maxacc : %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxAccMagnitude);
+			solver.debug = true;
+			solver.Solve(a.vx_new, a.vy_new);
+			solver.debug = false;
+		}
+
+		if (BMU::isnanf(a.vx_new) || BMU::isnanf(a.vy_new))
 		{
 			UE_LOG(LogRVOTest, Warning, TEXT("BAM\n"));
+			solver.debug = true;
 			solver.Solve(a.vx_new, a.vy_new);
-			if (isnan(a.vx_new) || isnan(a.vy_new))
+			solver.debug = false;
+			if (BMU::isnanf(a.vx_new) || BMU::isnanf(a.vy_new))
 			{
-				UE_LOG(LogRVOTest, Warning, TEXT("BAM confirm\n"));
+				UE_LOG(LogRVOTest, VeryVerbose, TEXT("BAM confirm\n"));
 			}
 		}
 	}

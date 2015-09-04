@@ -27,19 +27,19 @@ void Grid::clear()
 
 size_t Grid::GetIndex(int xcoord, int ycoord)
 {
-	UE_LOG(LogRVOTest, Warning, TEXT("getindex res %d"), (xcoord * NE_YCOUNT + ycoord) * NE_MAXUNITS_IN_CELL);
+	UE_LOG(LogRVOTest, VeryVerbose, TEXT("getindex res %d"), (xcoord * NE_YCOUNT + ycoord) * NE_MAXUNITS_IN_CELL);
 
 	return (xcoord * NE_YCOUNT + ycoord) * NE_MAXUNITS_IN_CELL;
 }
 
 size_t Grid::GetIndexf(float x, float y)
 {
-	UE_LOG(LogRVOTest, Warning, TEXT("getindexf x, y : %f %f"), x, y);
+	UE_LOG(LogRVOTest, VeryVerbose, TEXT("getindexf x, y : %f %f"), x, y);
 
 	int xcoord = (x - NE_XMIN) / NE_SIDE;
 	int ycoord = (y - NE_YMIN) / NE_SIDE;
 
-	UE_LOG(LogRVOTest, Warning, TEXT("getindexf xc yc : %d  %d"), xcoord, ycoord);
+	UE_LOG(LogRVOTest, VeryVerbose, TEXT("getindexf xc yc : %d  %d"), xcoord, ycoord);
 
 	return GetIndex(xcoord, ycoord);
 }
@@ -53,7 +53,7 @@ void Grid::setAgent(float x, float y, uint16 id)
 	{
 		if (AgentIds[index + i] == NE_INVALID_AGENT_ID)
 		{
-			UE_LOG(LogRVOTest, Warning, TEXT("setAgent x %f , y %f, id %d,  index + i %d + %d"), x, y, id, index, i);
+			UE_LOG(LogRVOTest, VeryVerbose, TEXT("setAgent x %f , y %f, id %d,  index + i %d + %d"), x, y, id, index, i);
 
 			AgentIds[index + i] = id;
 			Indexes[num++] = index + i;
@@ -78,7 +78,7 @@ void Grid::setAgentNeighbours(uint16 id, ORCASolver* solver)
 {
 	Agent& a = solver->GetAgent(id);
 	size_t startIndex = GetIndexf(a.x, a.y) - (NE_YCOUNT + 1) * NE_MAXUNITS_IN_CELL;
-	UE_LOG(LogRVOTest, Warning, TEXT("setAgentn id, startindex: %d %d"), id, startIndex);
+	UE_LOG(LogRVOTest, VeryVerbose, TEXT("setAgentn id, startindex: %d %d"), id, startIndex);
 
 	std::vector<uint16> closest;
 	closest.reserve(10);
@@ -104,7 +104,7 @@ void Grid::setAgentNeighbours(uint16 id, ORCASolver* solver)
 			}
 			if (AgentIds[index + j] != id)
 			{
-				UE_LOG(LogRVOTest, Warning, TEXT("agentids[%d + %d] = %d"), index, j, AgentIds[index + j]);
+				UE_LOG(LogRVOTest, VeryVerbose, TEXT("agentids[%d + %d] = %d"), index, j, AgentIds[index + j]);
 				//TODODO!!!
 				closest.push_back(AgentIds[index + j]);
 			}
@@ -117,7 +117,7 @@ void Grid::setAgentNeighbours(uint16 id, ORCASolver* solver)
 	for (int16 i = 0; i < CA_MAXNEARBY && i < closest.size(); i++)
 	{
 		solver->SetAgentsNearby(id, closest[i]);
-		UE_LOG(LogRVOTest, Warning, TEXT("closest [%d] = %d"), i, closest[i]);
+		UE_LOG(LogRVOTest, VeryVerbose, TEXT("closest [%d] = %d"), i, closest[i]);
 	}
 }
 
@@ -130,8 +130,7 @@ AORCAManager::AORCAManager()
 	PrimaryActorTick.bCanEverTick = true;
 	FBalaRVOModule::Solver()->ClearAgents();
 
-	
-	
+	comp.solver = FBalaRVOModule::Solver();
 	//unitList.
 }
 
@@ -168,7 +167,7 @@ void AORCAManager::Tick(float DeltaTime)
 		
 		if (PreferredVelocity.ContainsNaN())
 		{
-			UE_LOG(LogRVOTest, Warning, TEXT("AvoidanceComponent:: TICK , preferredvelocity: %f %f"), PreferredVelocity.X, PreferredVelocity.Y);
+			UE_LOG(LogRVOTest, VeryVerbose, TEXT("AvoidanceComponent:: TICK , preferredvelocity: %f %f"), PreferredVelocity.X, PreferredVelocity.Y);
 			PreferredVelocity = av->GetPreferredVelocity();
 
 		}
@@ -178,7 +177,7 @@ void AORCAManager::Tick(float DeltaTime)
 
 	}
 
-	grid.clear();
+	/*grid.clear();
 
 	for (int i = 0; i < units.Num(); i++)
 	{
@@ -190,16 +189,28 @@ void AORCAManager::Tick(float DeltaTime)
 	{
 		Agent& a = solver->GetAgent(i);
 		grid.setAgentNeighbours(i, solver);
-	}
-/*
+	}*/
+	
+	
+	
+	
 	for (int i = 0; i < units.Num(); i++)
 	{
-		for (int j = i + 1; j < units.Num(); j++)
+		
+		comp.agentId = i;
+
+		std::sort(closest.begin(), closest.end(), comp);
+		for (int j = 0; j < CA_MAXNEARBY + 1 && j < closest.size(); j++)
 		{
-			solver->SetAgentsNearby(i, j);
-			solver->SetAgentsNearby(j, i);
+			if (closest[j] == i)
+			{
+				continue;
+			}
+			solver->SetAgentsNearby(i, closest[j]);
 		}
-	}*/
+		
+		
+	}
 
 		
 	
@@ -218,14 +229,15 @@ void AORCAManager::Tick(float DeltaTime)
 
 		Agent& agent = solver->GetAgent(id);
 
+		
 		av->SetNewAvoidanceVelocity(FVector2D{ agent.vx_new, agent.vy_new });
 
-		UE_LOG(LogRVOTest, Warning, TEXT("orcaman:: new vel: %f %f"), agent.vx_new, agent.vy_new);
+		UE_LOG(LogRVOTest, VeryVerbose, TEXT("orcaman:: new vel: %f %f"), agent.vx_new, agent.vy_new);
 
 
 		if (FVector2D{ agent.vx_new, agent.vy_new }.ContainsNaN())
 		{
-			UE_LOG(LogRVOTest, Warning, TEXT("BAM ORCAMan szivas"));
+			UE_LOG(LogRVOTest, VeryVerbose, TEXT("BAM ORCAMan szivas"));
 			
 		}
 
@@ -237,11 +249,22 @@ void AORCAManager::Tick(float DeltaTime)
 void AORCAManager::RegisterAvoidanceComponent(UAvoidanceComponent* ac)
 {
 	units.AddUnique(ac);
+	closest.reserve(units.Num());
+	closest.push_back(units.Num() - 1);
+	
 }
 
 void AORCAManager::DeRegisterAvoidanceComponent(UAvoidanceComponent* ac)
 {
 	units.Remove(ac);
+	for (int i = 0; i < closest.size(); i++)
+	{
+		if (closest[i] == units.Num())
+		{
+			closest.erase(closest.begin() + i);
+			break;
+		}
+	}
 }
 
 

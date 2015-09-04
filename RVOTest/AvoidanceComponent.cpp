@@ -34,6 +34,7 @@ void UAvoidanceComponent::Activate(bool bReset)
 	mc = pawn->GetMovementComponent();
 
 	
+	
 	for (TActorIterator<AActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		AActor* actor = *ActorItr;
@@ -46,7 +47,7 @@ void UAvoidanceComponent::Activate(bool bReset)
 	}
 	if (!manager)
 	{
-		UE_LOG(LogRVOTest, Warning, TEXT("You have to place an ORCAManager in the scene for the Aavoidance Component to work"));
+		UE_LOG(LogRVOTest, VeryVerbose, TEXT("You have to place an ORCAManager in the scene for the Aavoidance Component to work"));
 	}
 	else
 	{
@@ -77,11 +78,11 @@ void UAvoidanceComponent::BeginPlay()
 
 void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity)
 {
-	UE_LOG(LogRVOTest, Warning, TEXT("uav component:: set new vel, old:  %f %f, new : %f %f %f"), mc->Velocity.X, mc->Velocity.Y, mc->Velocity.Z, newVelocity.X, newVelocity.Y);
+	UE_LOG(LogRVOTest, VeryVerbose, TEXT("uav component:: set new vel, old:  %f %f, new : %f %f %f"), mc->Velocity.X, mc->Velocity.Y, mc->Velocity.Z, newVelocity.X, newVelocity.Y);
 
 	mc->Velocity = FVector{ newVelocity, 0.f };
 	mc->UpdateComponentVelocity();
-
+	
 	newVel = newVelocity;
 }
 
@@ -99,7 +100,7 @@ FVector2D UAvoidanceComponent::GetPreferredVelocity()
 
 	if (res.ContainsNaN())
 	{
-		UE_LOG(LogRVOTest, Warning, TEXT("UAvoidanceComp:: GetPreferredV , %f %f"), res.X, res.Y);
+		UE_LOG(LogRVOTest, VeryVerbose, TEXT("UAvoidanceComp:: GetPreferredV , %f %f"), res.X, res.Y);
 	}
 
 	return ToTarget / sqrtf(sqrDist) * MaxVelocity * k;

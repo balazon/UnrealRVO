@@ -13,8 +13,8 @@ class UAvoidanceComponent;
 #define NE_YCOUNT (200)
 #define NE_XMIN (-8000.f)
 #define NE_YMIN (-8000.f)
-#define NE_SIDE (168.f)
-#define NE_MAXUNITS_IN_CELL (16)
+#define NE_SIDE (84.f)
+#define NE_MAXUNITS_IN_CELL (4)
 #define NE_INVALID_AGENT_ID (65535)
 
 struct CloserAgentComparator
@@ -83,6 +83,8 @@ protected:
 
 	Grid grid;
 	
+	CloserAgentComparator comp;
+	std::vector<int> closest;
 	
 };
 

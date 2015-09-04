@@ -12,6 +12,7 @@
 
 
 
+
 #include <vector>
 #include <unordered_set>
 
@@ -40,6 +41,7 @@ public:
 
 	void SolveSafest(int failIndex, float& resX, float& resY);
 
+	bool debug;
 private:
 	//destination coordinates
 	float u, v;
@@ -74,6 +76,13 @@ private:
 	// point is checked if it's inside circles and 
 	// if the max d distance from lines is smaller than current best solution's
 	void updatePointIfBetter(float x, float y, int n, float& resX, float& resY, float& d);
+
+
+	//TODO for min search pass as argument to 1d LP
+	//std::vector<float> temp;
+
+	//uint8 linearProgram1D(const std::vector<float>&  )
+	
 };
 
 
