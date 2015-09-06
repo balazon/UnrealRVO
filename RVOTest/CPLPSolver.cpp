@@ -53,6 +53,33 @@ void CPLPSolver::AddConstraintLinear(float A, float B, float C)
 
 void CPLPSolver::AddConstraintCircle(float U, float V, float R)
 {
+	for (int i = 0; i < constraints.size() / 3; i++)
+	{
+		if (constraintTypes[i] == CT_CIRCLE)
+		{
+			//when new circle is completely inside the another, the smaller one is enough
+			float rsub = constraints[i + 2] - R;
+			//float rsubAbs = fabsf(rsub);
+			
+			
+
+			float circDistSq = (constraints[i * 3] - U) * (constraints[i * 3] - U) + (constraints[i * 3 + 1] - V) * (constraints[i * 3 + 1] - V);
+			//if one circle is completely inside the other
+			if (circDistSq < rsub * rsub + fabs(rsub * EPS))
+			{
+				// 1) new one is smaller, replaces the big
+				if (rsub > 0.f)
+				{
+					constraints[i * 3] = U;
+					constraints[i * 3 + 1] = V;
+					constraints[i * 3 + 2] = R;
+				}
+
+				// 2) otherwise we ignore the new one
+				return;
+			}
+		}
+	}
 	constraints.reserve(constraints.size() + 3);
 	constraints.push_back(U);
 	constraints.push_back(V);
@@ -119,6 +146,10 @@ bool CPLPSolver::pointSatisfiesConstraint(float tx, float ty, int n, float d)
 
 bool CPLPSolver::pointSatisfiesConstraints(float tx, float ty, int n, float d, bool onlyCircles)
 {
+	if (debug)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("pointsatisfies: tx ty n d %f %f %d %f"), tx, ty, n, d);
+	}
 	for (int j = 0; j <= n; j++)
 	{
 		if (onlyCircles && constraintTypes[order[j]] == CT_LINEAR)
@@ -127,8 +158,16 @@ bool CPLPSolver::pointSatisfiesConstraints(float tx, float ty, int n, float d, b
 		}
 		if (!pointSatisfiesConstraint(tx, ty, order[j], d))
 		{
+			if (debug)
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("pointsatisfies: false"))
+			}
 			return false;
 		}
+	}
+	if (debug)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("pointsatisfies: true"))
 	}
 	return true;
 }
@@ -182,11 +221,20 @@ float CPLPSolver::getPointsMaxDistance(float x, float y)
 
 void CPLPSolver::updatePointIfBetter(float x, float y, int n, float& resX, float& resY, float& d)
 {
+	if (debug)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("updatepointif:  x y n %f %f %d"), x, y, n);
+	}
 	if (pointSatisfiesConstraints(x, y, n, 0.f, true))
 	{
+		
 		float td = getPointsMaxDistance(x, y);
 		if (td < d)
 		{
+			if (debug)
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("updatepointif updating, old d, new d %f %f"), d, td);
+			}
 			resX = x;
 			resY = y;
 			d = td;
@@ -194,7 +242,15 @@ void CPLPSolver::updatePointIfBetter(float x, float y, int n, float& resX, float
 			{
 				UE_LOG(LogRVOTest, Warning, TEXT("BAM in: updatepointifbetter"));
 			}
+			
 		}
+
+		
+	}
+
+	else if (debug)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("updatepointif:  not updating"));
 	}
 }
 
@@ -314,12 +370,29 @@ void CPLPSolver::Solve(float& resX, float& resY)
 			}
 			else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_CIRCLE)
 			{
+				
 				hasIntersection = BMU::IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
 				if (!hasIntersection)
 				{
+					float U1, V1, R1, U2, V2, R2;
+					U1 = constraints[pos]; V1 = constraints[pos + 1]; R1 = constraints[pos + 2]; U2 = constraints[pos2]; V2 = constraints[pos2 + 1]; R2 = constraints[pos2 + 2];
+
+					Reset();
+					if (pos > pos2)
+					{
+						AddConstraintCircle(U2, V2, R2);
+						AddConstraintCircle(U1, V1, R1);
+					}
+					else
+					{
+						AddConstraintCircle(U1, V1, R1);
+						AddConstraintCircle(U2, V2, R2);
+					}
+					
 					feasible = false;
 					return;
 				}
+				
 			}
 			if (hasIntersection)
 			{
@@ -468,6 +541,7 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 			}
 			else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_CIRCLE)
 			{
+				
 				hasIntersection = BMU::IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
 				if (!hasIntersection)
 				{
