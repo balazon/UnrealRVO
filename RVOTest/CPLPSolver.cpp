@@ -43,10 +43,11 @@ void CPLPSolver::Reset()
 
 void CPLPSolver::AddConstraintLinear(float A, float B, float C)
 {
+	float lrec = 1.f / sqrtf(A * A + B * B);
 	constraints.reserve(constraints.size() + 3);
-	constraints.push_back(A);
-	constraints.push_back(B);
-	constraints.push_back(C);
+	constraints.push_back(A * lrec);
+	constraints.push_back(B * lrec);
+	constraints.push_back(C * lrec);
 
 	constraintTypes.push_back(CT_LINEAR);
 }
@@ -58,7 +59,7 @@ void CPLPSolver::AddConstraintCircle(float U, float V, float R)
 		if (constraintTypes[i] == CT_CIRCLE)
 		{
 			//when new circle is completely inside the another, the smaller one is enough
-			float rsub = constraints[i + 2] - R;
+			float rsub = constraints[i * 3 + 2] - R;
 			//float rsubAbs = fabsf(rsub);
 			
 			
@@ -460,9 +461,9 @@ void CPLPSolver::Solve(float& resX, float& resY)
 void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 {
 	filter.clear();
-	//createRandomOrder();
+	
 
-	normalizeLinearConstraints();
+	//normalizeLinearConstraints();
 
 	float tx = 0.f;
 	float ty = 0.f;

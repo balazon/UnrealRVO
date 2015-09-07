@@ -41,7 +41,7 @@ namespace BMU
 
 
 
-#define EPS (0.001)
+#define EPS (0.0001)
 
 
 	bool inline isnanf(float k)
@@ -97,6 +97,8 @@ namespace BMU
 			x1 = x2 = -c / b;
 			return true;
 		}
+
+
 		if ((D = b * b - 4 * a * c) < 0)
 		{
 			return false;
@@ -118,7 +120,7 @@ namespace BMU
 	{
 		UE_LOG(LogRVOTest, VeryVerbose, TEXT("ilc params: %f %f %f %f %f %f"), A, B, C, u, v, r);
 
-		bool swapped = false;
+		
 		if (fabs(A) < EPS && fabs(B) < EPS)
 		{
 			UE_LOG(LogRVOTest, VeryVerbose, TEXT("ilc params: %f %f %f %f %f %f"), A, B, C, u, v, r);
@@ -138,6 +140,9 @@ namespace BMU
 		}
 		y1 = (C - A * x1) / B;
 		y2 = (C - A * x2) / B;
+
+		OrthogonalProjectionOfPointOnCircle(u, v, r, x1, y1, x1, y1);
+		OrthogonalProjectionOfPointOnCircle(u, v, r, x2, y2, x2, y2);
 
 		if (isnanf(x1) || isnanf(x2) || isnanf(y1) || isnanf(y2))
 		{
@@ -189,12 +194,20 @@ namespace BMU
 		H = B - E;
 		I = C - F;
 
+
+
 		if (fabs(G) < EPS && fabs(H) < EPS)
 		{
 			UE_LOG(LogRVOTest, VeryVerbose, TEXT("anglebis: %f %f %f %f %f %f"), A, B, C, D, E, F);
 
 			return false;
 		}
+
+		float lrec = 1.f / sqrtf(G * G + H * H);
+		G *= lrec;
+		H *= lrec;
+		I *= lrec;
+
 		return true;
 	}
 
