@@ -5,3 +5,4 @@
 
 
 
+bool BMU::debug = false;

@@ -21,9 +21,9 @@ Agent::Agent() : Agent{ 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f }
 }
 
 Agent::Agent(float x, float y, float vx, float vy, float r, float vx_pref, float vy_pref, float maxVelocityMagnitude, float maxAccMagnitude)
-	: x{ x }, y{ y }, vx{ vx }, vy{ vy }, r{ r }, vx_pref{ vx_pref }, vy_pref{ vy_pref }, maxVelocityMagnitude{ maxVelocityMagnitude }, maxAccMagnitude{ maxAccMagnitude }
+	: x{ x }, y{ y }, vx{ vx }, vy{ vy }, r{ r }, vx_pref{ vx_pref }, vy_pref{ vy_pref }, maxVelocityMagnitude{ maxVelocityMagnitude }, maxAccMagnitude{ maxAccMagnitude }, nearbyCount{ 0 }
 {
-	std::fill_n(nearbyAgents, CA_MAXNEARBY, -1);
+	
 }
 
 Agent::~Agent()
@@ -33,19 +33,18 @@ Agent::~Agent()
 void ORCASolver::ClearNeighbours(int i)
 {
 	Agent& a = agents[i];
-	std::fill_n(a.nearbyAgents, CA_MAXNEARBY, -1);
+	a.nearbyCount = 0;
 }
 void ORCASolver::SetAgentsNearby(int i, int j)
 {
+	
 	Agent& a = agents[i];
-	for (int k = 0; k < CA_MAXNEARBY; k++)
+	if (a.nearbyCount >= CA_MAXNEARBY)
 	{
-		if (a.nearbyAgents[k] == -1)
-		{
-			a.nearbyAgents[k] = j;
-			return;
-		}
+		return;
 	}
+	a.nearbyAgents[a.nearbyCount] = j;
+	a.nearbyCount++;
 }
 
 bool ORCASolver::AreAgentsNeighbours(int i, int j)
@@ -54,9 +53,12 @@ bool ORCASolver::AreAgentsNeighbours(int i, int j)
 
 	Agent& a = agents[i];
 	Agent& b = agents[j];
-	for (int k = 0; k < CA_MAXNEARBY; k++)
+	int aNearby = a.nearbyCount;
+	int bNearby = b.nearbyCount;
+	int maxN = aNearby < bNearby ? bNearby : aNearby;
+	for (int k = 0; k < maxN; k++)
 	{
-		if (a.nearbyAgents[k] == j || b.nearbyAgents[k] == i)
+		if (k < aNearby && a.nearbyAgents[k] == j || k < bNearby && b.nearbyAgents[k] == i)
 		{
 			UE_LOG(LogRVOTest, VeryVerbose, TEXT("agentsneighbours true"));
 			return true;
@@ -73,19 +75,22 @@ void ORCASolver::SetUVector(int i, int j, float ux, float uy)
 	bool bset = false;
 	Agent& a = agents[i];
 	Agent& b = agents[j];
-	for (int k = 0; k < CA_MAXNEARBY; k++)
+	int aNearby = a.nearbyCount;
+	int bNearby = b.nearbyCount;
+	int maxN = aNearby < bNearby ? bNearby : aNearby;
+	for (int k = 0; k < maxN; k++)
 	{
 		if (aset && bset)
 		{
 			return;
 		}
-		if (a.nearbyAgents[k] == j)
+		if (k < aNearby && a.nearbyAgents[k] == j)
 		{
 			a.ux[k] = ux;
 			a.uy[k] = uy;
 			aset = true;
 		}
-		if (b.nearbyAgents[k] == i)
+		if (k < bNearby && b.nearbyAgents[k] == i)
 		{
 			b.ux[k] = -ux;
 			b.uy[k] = -uy;
@@ -113,8 +118,8 @@ int ORCASolver::AddAgent()
 {
 	if (num == CA_MAXAGENTS)
 		return -1;
-
-	std::fill_n(agents[num].nearbyAgents, CA_MAXNEARBY, -1);
+	
+	agents[num].nearbyCount = 0;
 	return num++;
 }
 
@@ -266,12 +271,12 @@ void ORCASolver::ComputeNewVelocities()
 		solver.Reset();
 		UE_LOG(LogRVOTest, VeryVerbose, TEXT("vxpref %f %f"), a.vx_pref, a.vy_pref);
 		solver.SetDestination(a.vx_pref, a.vy_pref);
-		for (int j = 0; j < CA_MAXNEARBY; j++)
+		for (int j = 0; j < a.nearbyCount; j++)
 		{
 			float ux = a.ux[j];
 			float uy = a.uy[j];
 			//a.nearbyAgents[j] == i shouldn't happen but just to be safe
-			if (a.nearbyAgents[j] != -1 && (fabs(ux) > EPS || fabs(uy) > EPS) && a.nearbyAgents[j] != i)
+			if ((fabs(ux) > EPS || fabs(uy) > EPS) && a.nearbyAgents[j] != i)
 			{
 				float A = ux;
 				float B = uy;
@@ -303,8 +308,8 @@ void ORCASolver::ComputeNewVelocities()
 		}
 		else
 		{*/
-			solver.AddConstraintCircle(a.vx, a.vy, a.maxAccMagnitude);
-			solver.AddConstraintCircle(0.f, 0.f, a.maxVelocityMagnitude);
+			solver.AddConstraintCircle(a.vx, a.vy, a.maxAccMagnitude, true);
+			solver.AddConstraintCircle(0.f, 0.f, a.maxVelocityMagnitude, true);
 		//}
 		
 
@@ -318,7 +323,9 @@ void ORCASolver::ComputeNewVelocities()
 			if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2 * EPS))
 			{
 				UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);
+				BMU::debug = true;
 				solver.Solve(a.vx_new, a.vy_new);
+				BMU::debug = false;
 			}
 			solver.debug = false;
 		}
@@ -331,7 +338,9 @@ void ORCASolver::ComputeNewVelocities()
 			if ((a.vx_new - a.vx) * (a.vx_new - a.vx) + (a.vy_new - a.vy) * (a.vy_new - a.vy) > a.maxAccMagnitude * (a.maxAccMagnitude + 2 * EPS))
 			{
 				UE_LOG(LogRVOTest, Warning, TEXT("a.v %f %f, a.vnew %f %f, a.maxacc : %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxAccMagnitude);
+				BMU::debug = true;
 				solver.Solve(a.vx_new, a.vy_new);
+				BMU::debug = false;
 			}
 			solver.debug = false;
 		}

@@ -29,9 +29,11 @@ public:
 	void Reset();
 
 	//Ax + By < C
-	void AddConstraintLinear(float A, float B, float C);
+	//fixed for not being shuffled in Solve(), and stay in the beginning of the ordered constraints
+	void AddConstraintLinear(float A, float B, float C, bool fixed = false);
 
-	void AddConstraintCircle(float U, float V, float R);
+	//fixed for not being shuffled in Solve(), and stay in the beginning of the ordered constraints
+	void AddConstraintCircle(float U, float V, float R, bool fixed = false);
 
 	//Destination coordinates
 	void SetDestination(float u, float v);
@@ -76,6 +78,9 @@ private:
 	// point is checked if it's inside circles and 
 	// if the max d distance from lines is smaller than current best solution's
 	void updatePointIfBetter(float x, float y, int n, float& resX, float& resY, float& d);
+
+
+	int fixedElementsNum;
 
 
 	//TODO for min search pass as argument to 1d LP

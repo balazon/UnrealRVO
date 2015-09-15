@@ -23,6 +23,8 @@ struct Agent
 	float ux[CA_MAXNEARBY];
 	float uy[CA_MAXNEARBY];
 
+	int nearbyCount;
+
 	float maxVelocityMagnitude;
 	float maxAccMagnitude;
 

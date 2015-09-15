@@ -21,7 +21,7 @@
 #include "MathUtils.h"
 
 
-CPLPSolver::CPLPSolver() : debug{false}
+CPLPSolver::CPLPSolver() : debug{ false }, fixedElementsNum{0}
 {
 	constraints.reserve(30);
 	constraintTypes.reserve(30);
@@ -39,9 +39,10 @@ void CPLPSolver::Reset()
 	constraints.clear();
 	feasible = true;
 	constraintTypes.clear();
+	fixedElementsNum = 0;
 }
 
-void CPLPSolver::AddConstraintLinear(float A, float B, float C)
+void CPLPSolver::AddConstraintLinear(float A, float B, float C, bool fixed)
 {
 	float lrec = 1.f / sqrtf(A * A + B * B);
 	constraints.reserve(constraints.size() + 3);
@@ -50,9 +51,18 @@ void CPLPSolver::AddConstraintLinear(float A, float B, float C)
 	constraints.push_back(C * lrec);
 
 	constraintTypes.push_back(CT_LINEAR);
+
+	if (fixed)
+	{
+		auto oldPos = constraints.end() - 3;
+		auto newPos = constraints.begin() + fixedElementsNum * 3;
+		std::swap_ranges(newPos, newPos + 3, oldPos);
+		std::swap(constraintTypes[fixedElementsNum], *constraintTypes.rbegin());
+		fixedElementsNum++;
+	}
 }
 
-void CPLPSolver::AddConstraintCircle(float U, float V, float R)
+void CPLPSolver::AddConstraintCircle(float U, float V, float R, bool fixed)
 {
 	for (int i = 0; i < constraints.size() / 3; i++)
 	{
@@ -74,6 +84,14 @@ void CPLPSolver::AddConstraintCircle(float U, float V, float R)
 					constraints[i * 3] = U;
 					constraints[i * 3 + 1] = V;
 					constraints[i * 3 + 2] = R;
+
+					//old is not fixed
+					if (fixed && i >= fixedElementsNum)
+					{
+						auto oldPos = constraints.begin() + i * 3;
+						auto newPos = constraints.begin() + (fixedElementsNum - 1) * 3;
+						std::swap_ranges(newPos, newPos + 3, oldPos);
+					}
 				}
 
 				// 2) otherwise we ignore the new one
@@ -87,6 +105,15 @@ void CPLPSolver::AddConstraintCircle(float U, float V, float R)
 	constraints.push_back(R);
 
 	constraintTypes.push_back(CT_CIRCLE);
+
+	if (fixed)
+	{
+		auto oldPos = constraints.end() - 3;
+		auto newPos = constraints.begin() + fixedElementsNum * 3;
+		std::swap_ranges(newPos, newPos + 3, oldPos);
+		std::swap(constraintTypes[fixedElementsNum], *constraintTypes.rbegin());
+		fixedElementsNum++;
+	}
 }
 
 void CPLPSolver::SetDestination(float u, float v)
@@ -180,7 +207,7 @@ void CPLPSolver::createRandomOrder()
 	{
 		order.push_back(i);
 	}
-	std::random_shuffle(order.begin(), order.end());
+	std::random_shuffle(order.begin() + fixedElementsNum, order.end());
 }
 
 void CPLPSolver::normalizeLinearConstraints()
@@ -377,6 +404,12 @@ void CPLPSolver::Solve(float& resX, float& resY)
 				{
 					float U1, V1, R1, U2, V2, R2;
 					U1 = constraints[pos]; V1 = constraints[pos + 1]; R1 = constraints[pos + 2]; U2 = constraints[pos2]; V2 = constraints[pos2 + 1]; R2 = constraints[pos2 + 2];
+
+					UE_LOG(LogRVOTest, Warning, TEXT("cir cir: %f %f %f %f %f %f"), U1, V1, R1, U2, V2, R2);
+
+					BMU::debug = true;
+					BMU::IntersectCircleCircle(U1, V1, R1, U2, V2, R2, tx, ty, tx2, ty2);
+					BMU::debug = false;
 
 					Reset();
 					if (pos > pos2)
