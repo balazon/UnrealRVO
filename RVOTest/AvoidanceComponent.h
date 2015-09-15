@@ -59,4 +59,6 @@ protected:
 	AORCAManager* manager;
 
 	FVector2D newVel;
+
+	float angle;
 };

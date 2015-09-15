@@ -147,7 +147,7 @@ namespace BMU
 		y2 = (C - A * x2) / B;
 
 		if (debug)
-			UE_LOG(LogRVOTest, Warning, TEXT("ilc x1 y1 x2 y2 %f %f %f %f"), x1, x2, y1, y2);
+			UE_LOG(LogRVOTest, Warning, TEXT("ilc x1 y1 x2 y2 %f %f %f %f"), x1, y1, x2, y2);
 		
 			
 
@@ -155,7 +155,7 @@ namespace BMU
 		OrthogonalProjectionOfPointOnCircle(u, v, r, x2, y2, x2, y2);
 
 		if (debug)
-			UE_LOG(LogRVOTest, Warning, TEXT("ilc x1 y1 x2 y2 %f %f %f %f"), x1, x2, y1, y2);
+			UE_LOG(LogRVOTest, Warning, TEXT("ilc x1 y1 x2 y2 %f %f %f %f"), x1, y1, x2, y2);
 
 		if (isnanf(x1) || isnanf(x2) || isnanf(y1) || isnanf(y2))
 		{
@@ -168,7 +168,7 @@ namespace BMU
 	bool inline IntersectCircleCircle(float u1, float v1, float r1, float u2, float v2, float r2, float& x1, float& y1, float& x2, float& y2)
 	{
 		if (debug)
-		UE_LOG(LogRVOTest, Warning, TEXT("icc params: %f %f %f %f %f %f"), u1, v1, r1, u2, v2, r2)
+			UE_LOG(LogRVOTest, Warning, TEXT("icc params: %f %f %f %f %f %f"), u1, v1, r1, u2, v2, r2);
 
 		float A = u1 - u2;
 		float B = v1 - v2;

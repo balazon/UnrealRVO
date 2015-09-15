@@ -22,6 +22,8 @@ UAvoidanceComponent::UAvoidanceComponent()
 	MaxAcceleration = 2000.f;
 	
 	bAutoActivate = true;
+
+	angle = 0.f;
 	// ...
 }
 
@@ -83,6 +85,40 @@ void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity)
 	mc->Velocity = FVector{ newVelocity, 0.f };
 	mc->UpdateComponentVelocity();
 	
+	FVector v_old{ mc->Velocity };
+	FVector v_new{ newVelocity, 0.f };
+	FVector fromOldToNew = v_new - v_old;
+	FVector dir;
+	float length;
+	v_new.ToDirectionAndLength(dir, length);
+
+	
+
+	//UE_LOG(LogRVOTest, Warning, TEXT("dir: %f %f"), dir.X, dir.Y);
+
+
+	//UCharacterMovementComponent* cmc = Cast<UCharacterMovementComponent>(mc);
+	
+	//ACharacter* mychar = Cast<ACharacter>(pawn);
+	//mychar->laun
+	//mc->AddInputVector(dir);
+
+	//pawn->AddMovementInput(dir, length);
+	
+	float v_angle = atan2f(dir.Y, dir.X);
+	if (length > 45.f)
+	{
+		angle = v_angle;
+	}
+	if (length < 5.f)
+	{
+		v_angle = angle;
+	}
+	
+	//UE_LOG(LogRVOTest, Warning, TEXT("angles: %f %f"), v_angle, angle2);
+	
+	pawn->SetActorRotation(FRotator{ 0.f, v_angle * 57.296f, 0.f });
+
 	newVel = newVelocity;
 }
 
@@ -113,6 +149,9 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 	
 	SetNewAvoidanceVelocity(newVel);
+
+	//float angle = atan2f(newVel.Y, newVel.X);
+	//pawn->SetActorRotation(FRotator{ 0.f, angle * 6.283f, 0.f });
 	// ...
 }
 

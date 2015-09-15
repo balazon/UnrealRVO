@@ -317,9 +317,11 @@ void ORCASolver::ComputeNewVelocities()
 
 		if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2 * EPS))
 		{
-			UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);
+			a.vx_new *= 0.99f;
+			a.vy_new *= 0.99f;
+			/*UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);
 			solver.debug = true;
-			solver.Solve(a.vx_new, a.vy_new);
+			solver.Solve(a.vx_new, a.vy_new);*/
 			if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2 * EPS))
 			{
 				UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);
@@ -330,11 +332,18 @@ void ORCASolver::ComputeNewVelocities()
 			solver.debug = false;
 		}
 
-		if ((a.vx_new - a.vx) * (a.vx_new - a.vx) + (a.vy_new - a.vy) * (a.vy_new - a.vy) > a.maxAccMagnitude * (a.maxAccMagnitude + 2 * EPS))
+		float axnew = a.vx_new - a.vx;
+		float aynew = a.vy_new - a.vy;
+		if (axnew * axnew + aynew * aynew > a.maxAccMagnitude)
 		{
-			UE_LOG(LogRVOTest, Warning, TEXT("a.v %f %f, a.vnew %f %f, a.maxacc : %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxAccMagnitude);
+			axnew *= 0.99f;
+			aynew *= 0.99f;
+			a.vx_new = a.vx + axnew;
+			a.vy_new = a.vy + aynew;
+
+			/*UE_LOG(LogRVOTest, Warning, TEXT("a.v %f %f, a.vnew %f %f, a.maxacc : %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxAccMagnitude);
 			solver.debug = true;
-			solver.Solve(a.vx_new, a.vy_new);
+			solver.Solve(a.vx_new, a.vy_new);*/
 			if ((a.vx_new - a.vx) * (a.vx_new - a.vx) + (a.vy_new - a.vy) * (a.vy_new - a.vy) > a.maxAccMagnitude * (a.maxAccMagnitude + 2 * EPS))
 			{
 				UE_LOG(LogRVOTest, Warning, TEXT("a.v %f %f, a.vnew %f %f, a.maxacc : %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxAccMagnitude);
