@@ -46,7 +46,7 @@ float FBalaRVOModule::getAFloat()
 	agent.x = 1.f;
 	return agent.x;*/
 	//solver.ComputeNewVelocities();
-	
+
 	return 1.f;
 }
 
@@ -58,7 +58,7 @@ float FBalaRVOModule::getAFloat()
 float FBalaRVOModule::getSum(float a, float b)
 {
 	return a + b;
-	
+
 }
 
 IMPLEMENT_PRIMARY_GAME_MODULE(FBalaRVOModule, RVOTest, "RVOTest");

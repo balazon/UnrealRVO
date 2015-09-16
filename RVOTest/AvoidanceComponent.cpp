@@ -7,6 +7,8 @@
 
 #include "ORCAManager.h"
 
+//#include "UnrealMathUtility.h"
+
 // Sets default values for this component's properties
 UAvoidanceComponent::UAvoidanceComponent()
 {
@@ -24,6 +26,7 @@ UAvoidanceComponent::UAvoidanceComponent()
 	bAutoActivate = true;
 
 	angle = 0.f;
+	
 	// ...
 }
 
@@ -82,8 +85,9 @@ void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity)
 {
 	UE_LOG(LogRVOTest, VeryVerbose, TEXT("uav component:: set new vel, old:  %f %f, new : %f %f %f"), mc->Velocity.X, mc->Velocity.Y, mc->Velocity.Z, newVelocity.X, newVelocity.Y);
 
-	mc->Velocity = FVector{ newVelocity, 0.f };
-	mc->UpdateComponentVelocity();
+	//mc->Velocity = FVector{ newVelocity, 0.f };
+	mc->RequestDirectMove(FVector{ newVelocity, 0.f }, false);
+	//mc->UpdateComponentVelocity();
 	
 	FVector v_old{ mc->Velocity };
 	FVector v_new{ newVelocity, 0.f };
@@ -99,25 +103,43 @@ void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity)
 
 	//UCharacterMovementComponent* cmc = Cast<UCharacterMovementComponent>(mc);
 	
-	//ACharacter* mychar = Cast<ACharacter>(pawn);
+	ACharacter* mychar = Cast<ACharacter>(pawn);
 	//mychar->laun
 	//mc->AddInputVector(dir);
 
 	//pawn->AddMovementInput(dir, length);
 	
+	
 	float v_angle = atan2f(dir.Y, dir.X);
-	if (length > 45.f)
-	{
-		angle = v_angle;
-	}
-	if (length < 5.f)
+	//if (length > 15.f)
+	//{
+	//	angle = v_angle;
+	//}
+	//if (length < 1.f)
+	//{
+	//	v_angle = angle;
+	//}
+
+	
+	if (length < 1.f)
 	{
 		v_angle = angle;
 	}
+	else
+	{
+		
+		angle = v_angle;
+	}
+	//pawn->InputComponent->
+	//pawn->Tick(2.f);
 	
-	//UE_LOG(LogRVOTest, Warning, TEXT("angles: %f %f"), v_angle, angle2);
+	//mc->vel
+
+	//UE_LOG(LogRVOTest, Warning, TEXT("angles: %f %f"), v_angle, angle);
 	
 	pawn->SetActorRotation(FRotator{ 0.f, v_angle * 57.296f, 0.f });
+	
+	
 
 	newVel = newVelocity;
 }
@@ -130,16 +152,17 @@ FVector2D UAvoidanceComponent::GetPreferredVelocity()
 	if (sqrDist < 1600.f)
 		return FVector2D{};
 
-	float k = sqrDist < 10000.f ? sqrDist / 10000.f : 1.f;
+	
+	float k = sqrDist < 10000.f ? sqrDist * 1.19047619e-4f - 0.19047619f : 1.f;
 
-	FVector2D res = ToTarget / sqrtf(sqrDist) * MaxVelocity;
+	FVector2D res = ToTarget.GetSafeNormal() * MaxVelocity * k;
 
 	if (res.ContainsNaN())
 	{
 		UE_LOG(LogRVOTest, VeryVerbose, TEXT("UAvoidanceComp:: GetPreferredV , %f %f"), res.X, res.Y);
 	}
 
-	return ToTarget / sqrtf(sqrDist) * MaxVelocity * k;
+	return res;
 }
 
 
@@ -148,7 +171,7 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 	
-	SetNewAvoidanceVelocity(newVel);
+	//SetNewAvoidanceVelocity(newVel);
 
 	//float angle = atan2f(newVel.Y, newVel.X);
 	//pawn->SetActorRotation(FRotator{ 0.f, angle * 6.283f, 0.f });

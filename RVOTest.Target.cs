@@ -5,21 +5,21 @@ using System.Collections.Generic;
 
 public class RVOTestTarget : TargetRules
 {
-	public RVOTestTarget(TargetInfo Target)
-	{
-		Type = TargetType.Game;
-	}
+    public RVOTestTarget(TargetInfo Target)
+    {
+        Type = TargetType.Game;
+    }
 
-	//
-	// TargetRules interface.
-	//
+    //
+    // TargetRules interface.
+    //
 
-	public override void SetupBinaries(
-		TargetInfo Target,
-		ref List<UEBuildBinaryConfiguration> OutBuildBinaryConfigurations,
-		ref List<string> OutExtraModuleNames
-		)
-	{
-		OutExtraModuleNames.AddRange( new string[] { "RVOTest" } );
-	}
+    public override void SetupBinaries(
+        TargetInfo Target,
+        ref List<UEBuildBinaryConfiguration> OutBuildBinaryConfigurations,
+        ref List<string> OutExtraModuleNames
+        )
+    {
+        OutExtraModuleNames.AddRange(new string[] { "RVOTest" });
+    }
 }

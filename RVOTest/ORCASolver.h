@@ -22,6 +22,7 @@ struct Agent
 	int nearbyAgents[CA_MAXNEARBY];
 	float ux[CA_MAXNEARBY];
 	float uy[CA_MAXNEARBY];
+	bool uConstraintReversed[CA_MAXNEARBY];
 
 	int nearbyCount;
 
@@ -48,7 +49,7 @@ public:
 	void ClearNeighbours(int i);
 	void SetAgentsNearby(int i, int j);
 	bool AreAgentsNeighbours(int i, int j);
-	void SetUVector(int i, int j, float ux, float uy);
+	void SetUVector(int i, int j, float ux, float uy, bool reversed = false);
 
 	//void setAgentState(float x, float y, float vx, float vy, float r, float vx_pref, float vy_pref)
 
@@ -66,7 +67,8 @@ public:
 
 	//new velocities which hopefully help avoid collisions
 	void ComputeNewVelocities();
-
+	
+	void SetDebugging(bool on);
 private:
 
 	//used for calculating the limited VO (t < T)

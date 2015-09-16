@@ -12,7 +12,7 @@
 
 #include "CPLPSolver.h"
 
-#define EPS (0.001)
+//#define EPS (0.001)
 
 CPLPSolver solver;
 
@@ -69,7 +69,7 @@ bool ORCASolver::AreAgentsNeighbours(int i, int j)
 }
 
 //for i agent (ux, uy), for j agent (-ux, -uy)
-void ORCASolver::SetUVector(int i, int j, float ux, float uy)
+void ORCASolver::SetUVector(int i, int j, float ux, float uy, bool reversed)
 {
 	bool aset = false;
 	bool bset = false;
@@ -88,12 +88,14 @@ void ORCASolver::SetUVector(int i, int j, float ux, float uy)
 		{
 			a.ux[k] = ux;
 			a.uy[k] = uy;
+			a.uConstraintReversed[k] = reversed;
 			aset = true;
 		}
 		if (k < bNearby && b.nearbyAgents[k] == i)
 		{
 			b.ux[k] = -ux;
 			b.uy[k] = -uy;
+			b.uConstraintReversed[k] = reversed;
 			bset = true;
 		}
 	}
@@ -162,6 +164,9 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 	float Px, Py;
 	float Qx, Qy;
 
+	//should the constraint area be reversed (the other half plane is allowed)
+	bool reversed = false;
+
 	//bool IntersectCircleCircle(float u1, float v1, float r1, float u2, float v2, float r2, float& x1, float& y1, float& x2, float& y2)
 
 
@@ -182,7 +187,7 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 		std::swap(Py, Qy);
 	}
 
-	//float constraints[3 * 4];
+	
 	float Npx = -Py;
 	float Npy = Px;
 	if (Npx * Ox + Npy * Oy > 0)
@@ -204,32 +209,35 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 	float vrelx = a.vx - b.vx;
 	float vrely = a.vy - b.vy;
 
+	//outside QAP angle area
+	
 	if (Npx * vrelx + Npy * vrely > 0 || Nqx * vrelx + Nqy * vrely > 0)
 	{
 		SetUVector(i, j, 0.f, 0.f);
 		return;
+		/*if (Npx * vrelx + Npy * vrely > a.maxAccMagnitude + b.maxAccMagnitude || Nqx * vrelx + Nqy * vrely > a.maxAccMagnitude + b.maxAccMagnitude )
+		{
+			SetUVector(i, j, 0.f, 0.f);
+			return;
+		}*/
+		
+	}
+	else
+	{
+		reversed = true;
 	}
 
 
 	//Inside OG, or OH constraint is the area that contains B
-	float Aog = Px;
-	float Bog = Py;
+	float Aog = -Px;
+	float Bog = -Py;
 	float Cog = Aog * Ox + Bog * Oy;
-	if (Aog * ABx + Bog * ABy > Cog)
-	{
-		Aog = -Aog;
-		Bog = -Bog;
-		Cog = -Cog;
-	}
-	float Aoh = Qx;
-	float Boh = Qy;
+	
+	float Aoh = -Qx;
+	float Boh = -Qy;
 	float Coh = Aoh * Ox + Boh * Oy;
-	if (Aoh * ABx + Boh * ABy > Coh)
-	{
-		Aoh = -Aoh;
-		Boh = -Boh;
-		Coh = -Coh;
-	}
+	
+
 	float Sx, Sy;
 	if (Aog * vrelx + Bog * vrely < Cog || Aoh * vrelx + Boh * vrely < Coh)
 	{
@@ -250,6 +258,13 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 	{
 		SetUVector(i, j, 0.f, 0.f);
 		return;
+		/*BMU::OrthogonalProjectionOfPointOnCircle(Ox, Oy, r, vrelx, vrely, Sx, Sy);
+		if ((vrelx - Sx) * (vrelx - Sx) + (vrely - Sy) * (vrely - Sy) > a.maxAccMagnitude + b.maxAccMagnitude)
+		{
+			SetUVector(i, j, 0.f, 0.f);
+			return;
+		}
+		reversed = true;*/
 	}
 
 	SetUVector(i, j, Sx - vrelx, Sy - vrely);
@@ -268,6 +283,12 @@ void ORCASolver::ComputeNewVelocities()
 			}
 		}
 		Agent& a = agents[i];
+		if (a.vx_pref * a.vx_pref + a.vy_pref * a.vy_pref < EPS)
+		{
+			a.vx_new = 0.f;
+			a.vy_new = 0.f;
+			continue;
+		}
 		solver.Reset();
 		UE_LOG(LogRVOTest, VeryVerbose, TEXT("vxpref %f %f"), a.vx_pref, a.vy_pref);
 		solver.SetDestination(a.vx_pref, a.vy_pref);
@@ -275,12 +296,17 @@ void ORCASolver::ComputeNewVelocities()
 		{
 			float ux = a.ux[j];
 			float uy = a.uy[j];
+			bool reversed = a.uConstraintReversed[j];
 			//a.nearbyAgents[j] == i shouldn't happen but just to be safe
 			if ((fabs(ux) > EPS || fabs(uy) > EPS) && a.nearbyAgents[j] != i)
 			{
 				float A = ux;
 				float B = uy;
+
+				asdasodkasokdaso
+				//TODO reverse thing tomorrow
 				//V_a + u / 2, direction is u
+				
 				float C = A * (a.vx + ux * .5f) + B * (a.vy + uy * .5f);
 				if (A * a.vx + B * a.vy < C)
 				{
@@ -301,16 +327,10 @@ void ORCASolver::ComputeNewVelocities()
 			}
 		}
 
-		/*if (a.vx < EPS && a.vy < EPS)
-		{
-			
-			solver.AddConstraintCircle(0.f, 0.f, fminf(a.maxAccMagnitude, a.maxVelocityMagnitude));
-		}
-		else
-		{*/
-			solver.AddConstraintCircle(a.vx, a.vy, a.maxAccMagnitude, true);
-			solver.AddConstraintCircle(0.f, 0.f, a.maxVelocityMagnitude, true);
-		//}
+		
+		solver.AddConstraintCircle(a.vx, a.vy, a.maxAccMagnitude, true);
+		solver.AddConstraintCircle(0.f, 0.f, a.maxVelocityMagnitude, true);
+		
 		
 
 		solver.Solve(a.vx_new, a.vy_new);
@@ -319,9 +339,7 @@ void ORCASolver::ComputeNewVelocities()
 		{
 			a.vx_new *= 0.99f;
 			a.vy_new *= 0.99f;
-			/*UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);
-			solver.debug = true;
-			solver.Solve(a.vx_new, a.vy_new);*/
+			
 			if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2 * EPS))
 			{
 				UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);
@@ -329,7 +347,7 @@ void ORCASolver::ComputeNewVelocities()
 				solver.Solve(a.vx_new, a.vy_new);
 				BMU::debug = false;
 			}
-			solver.debug = false;
+			
 		}
 
 		float axnew = a.vx_new - a.vx;
@@ -341,9 +359,6 @@ void ORCASolver::ComputeNewVelocities()
 			a.vx_new = a.vx + axnew;
 			a.vy_new = a.vy + aynew;
 
-			/*UE_LOG(LogRVOTest, Warning, TEXT("a.v %f %f, a.vnew %f %f, a.maxacc : %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxAccMagnitude);
-			solver.debug = true;
-			solver.Solve(a.vx_new, a.vy_new);*/
 			if ((a.vx_new - a.vx) * (a.vx_new - a.vx) + (a.vy_new - a.vy) * (a.vy_new - a.vy) > a.maxAccMagnitude * (a.maxAccMagnitude + 2 * EPS))
 			{
 				UE_LOG(LogRVOTest, Warning, TEXT("a.v %f %f, a.vnew %f %f, a.maxacc : %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxAccMagnitude);
@@ -351,7 +366,7 @@ void ORCASolver::ComputeNewVelocities()
 				solver.Solve(a.vx_new, a.vy_new);
 				BMU::debug = false;
 			}
-			solver.debug = false;
+			
 		}
 
 		if (BMU::isnanf(a.vx_new) || BMU::isnanf(a.vy_new))
@@ -366,4 +381,10 @@ void ORCASolver::ComputeNewVelocities()
 			}
 		}
 	}
+}
+
+void ORCASolver::SetDebugging(bool on)
+{
+	solver.debug = on;
+	BMU::debug = on;
 }

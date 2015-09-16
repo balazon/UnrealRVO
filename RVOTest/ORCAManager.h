@@ -43,7 +43,8 @@ public:
 
 	void DeRegisterAvoidanceComponent(UAvoidanceComponent* ac);
 
-	
+	UFUNCTION(BlueprintCallable, Category = Avoidance, meta = (DisplayName = "Set debug mode"))
+	void SetDebugging(bool on);
 
 protected:
 	ORCASolver* solver;

@@ -178,3 +178,9 @@ void AORCAManager::CalculateNearest()
 	kdTree.build(points);
 	kdTree.updateNeighbours(solver);
 }
+
+
+void AORCAManager::SetDebugging(bool on)
+{
+	solver->SetDebugging(on);
+}
