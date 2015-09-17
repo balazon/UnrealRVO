@@ -27,6 +27,9 @@ UAvoidanceComponent::UAvoidanceComponent()
 
 	angle = 0.f;
 	
+	bStuck = false;
+
+	bDetour = false;
 	// ...
 }
 
@@ -81,47 +84,42 @@ void UAvoidanceComponent::BeginPlay()
 	// ...
 }
 
-void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity)
+void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity, FVector2D inputDir, float inputScale)
 {
 	UE_LOG(LogRVOTest, VeryVerbose, TEXT("uav component:: set new vel, old:  %f %f, new : %f %f %f"), mc->Velocity.X, mc->Velocity.Y, mc->Velocity.Z, newVelocity.X, newVelocity.Y);
 
 	//mc->Velocity = FVector{ newVelocity, 0.f };
+	
 	mc->RequestDirectMove(FVector{ newVelocity, 0.f }, false);
 	//mc->UpdateComponentVelocity();
 	
-	FVector v_old{ mc->Velocity };
-	FVector v_new{ newVelocity, 0.f };
-	FVector fromOldToNew = v_new - v_old;
-	FVector dir;
-	float length;
-	v_new.ToDirectionAndLength(dir, length);
+	FVector2D Vpref = GetPreferredVelocity();
 
 	
-
-	//UE_LOG(LogRVOTest, Warning, TEXT("dir: %f %f"), dir.X, dir.Y);
-
-
-	//UCharacterMovementComponent* cmc = Cast<UCharacterMovementComponent>(mc);
-	
-	ACharacter* mychar = Cast<ACharacter>(pawn);
-	//mychar->laun
-	//mc->AddInputVector(dir);
-
-	//pawn->AddMovementInput(dir, length);
-	
-	
-	float v_angle = atan2f(dir.Y, dir.X);
-	//if (length > 15.f)
-	//{
-	//	angle = v_angle;
-	//}
-	//if (length < 1.f)
-	//{
-	//	v_angle = angle;
-	//}
+	if (!bDetour && Vpref.SizeSquared() > MaxVelocity / 2.f && newVelocity.SizeSquared() < 1.f)
+	{
+		bStuck = true;
+	}
+	else
+	{
+		bStuck = false;
+		stuckTimer = 3.f;
+	}
 
 	
-	if (length < 1.f)
+	
+	//UE_LOG(LogRVOTest, Warning, TEXT("newVel, inputdir, inputScale: (%f %f), (%f %f), %f"), newVelocity.X, newVelocity.Y, inputDir.X, inputDir.Y, inputScale);
+	//if (inputScale > 0.1)
+	//pawn->AddMovementInput(FVector{ inputDir , 0.f}, inputScale);
+
+	
+	
+	/*ACharacter* mychar = Cast<ACharacter>(pawn);*/
+	
+
+	/*float v_angle = atan2f(inputDir.Y, inputDir.X);
+	
+	if (inputScale < 1.f)
 	{
 		v_angle = angle;
 	}
@@ -129,19 +127,16 @@ void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity)
 	{
 		
 		angle = v_angle;
-	}
-	//pawn->InputComponent->
-	//pawn->Tick(2.f);
+	}*/
 	
-	//mc->vel
 
 	//UE_LOG(LogRVOTest, Warning, TEXT("angles: %f %f"), v_angle, angle);
 	
-	pawn->SetActorRotation(FRotator{ 0.f, v_angle * 57.296f, 0.f });
+	//pawn->SetActorRotation(FRotator{ 0.f, v_angle * 57.296f, 0.f });
 	
 	
 
-	newVel = newVelocity;
+	//newVel = newVelocity;
 }
 
 FVector2D UAvoidanceComponent::GetPreferredVelocity()
@@ -171,7 +166,45 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 	
+	if (bDetour)
+	{
+		stuckTimer -= DeltaTime;
+		if (stuckTimer < 0.f)
+		{
+			FVector2D temp = CurrentTarget;
+			CurrentTarget = TempTarget;
+			TempTarget = CurrentTarget;
+			bStuck = false;
+			stuckTimer = 3.f;
+			bDetour = false;
+		}
+	}
+
+	if (bStuck)
+	{
+		stuckTimer -= DeltaTime;
+		if (stuckTimer < 0.f)
+		{
+			//FVector::Unit
+			
+			FMath::VRandCone(-pawn->GetActorForwardVector(), 1.2f);
+			
+			float translate = FMath::FRandRange(0.8f, 1.2f) * 100.f;
+			TempTarget = FVector2D{ pawn->GetActorLocation() } +FVector2D{ FMath::VRandCone(-pawn->GetActorForwardVector(), 1.2f) } *translate;
+			
+			FVector2D temp = CurrentTarget;
+			CurrentTarget = TempTarget;
+			TempTarget = CurrentTarget;
+			bStuck = false;
+			stuckTimer = 3.f;
+			bDetour = true;
+		}
+	}
+
 	//SetNewAvoidanceVelocity(newVel);
+	//pawn->AddMovementInput(inputDir, inputL);
+	//mc->AddInputVector
+	
 
 	//float angle = atan2f(newVel.Y, newVel.X);
 	//pawn->SetActorRotation(FRotator{ 0.f, angle * 6.283f, 0.f });

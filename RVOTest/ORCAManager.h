@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "ORCASolver.h"
 #include "KdTree.h"
+
 #include "ORCAManager.generated.h"
 
 class UAvoidanceComponent;
@@ -34,10 +35,10 @@ public:
 	virtual void BeginPlay() override;
 
 	// Called every frame
-	virtual void Tick(float DeltaSeconds) override;
+	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(BlueprintCallable, Category = Avoidance, meta = (DisplayName = "Simulate ORCA"))
-	void SimulateORCA();
+	//UFUNCTION(BlueprintCallable, Category = Avoidance, meta = (DisplayName = "Simulate ORCA"))
+	void SimulateORCA(float DeltaTime);
 
 	void RegisterAvoidanceComponent(UAvoidanceComponent* ac);
 
@@ -46,7 +47,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Avoidance, meta = (DisplayName = "Set debug mode"))
 	void SetDebugging(bool on);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance, meta = (DisplayName = "Update Interval in seconds"))
+	float UpdateInterval;
+
 protected:
+	FTimerHandle TimerHandle;
+	void UpdatingDelegate();
+
 	ORCASolver* solver;
 	
 	TArray<UAvoidanceComponent*> units;

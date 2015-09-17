@@ -45,14 +45,17 @@ public:
 
 	//TODO move all of AvoidanceUnit, and BalaCharacter RVO here!
 
-	void SetNewAvoidanceVelocity(FVector2D newVelocity);
+	void SetNewAvoidanceVelocity(FVector2D newVelocity, FVector2D inputDir, float inputScale);
 
 	FVector2D GetPreferredVelocity();
 
 	APawn* pawn;
 
 protected:
-
+	bool bDetour;
+	bool bStuck;
+	float stuckTimer;
+	FVector2D TempTarget;
 	
 	UPawnMovementComponent* mc;
 
@@ -61,4 +64,6 @@ protected:
 	FVector2D newVel;
 
 	float angle;
+
+	
 };

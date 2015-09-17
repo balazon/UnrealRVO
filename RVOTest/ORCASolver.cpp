@@ -203,6 +203,15 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 		Nqy = -Nqy;
 	}
 
+	float Nplrec = 1.f / sqrtf(Npx * Npx + Npy * Npy);
+	float Nqlrec = 1.f / sqrtf(Nqx * Nqx + Nqy * Nqy);
+
+	Npx *= Nplrec;
+	Npy *= Nplrec;
+	Nqx *= Nqlrec;
+	Nqy *= Nqlrec;
+	
+
 	//G, H points are not needed, but they are O's orthogonal projections to AP, and AQ (or the little circle's touching point)
 	//they are the 'g' and 'h' in variable names below: Aog, Aoh, ..
 
@@ -219,12 +228,9 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 		{
 			SetUVector(i, j, 0.f, 0.f);
 			return;
-		}*/
+		}
+		reversed = true;*/
 		
-	}
-	else
-	{
-		reversed = true;
 	}
 
 
@@ -259,7 +265,7 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 		SetUVector(i, j, 0.f, 0.f);
 		return;
 		/*BMU::OrthogonalProjectionOfPointOnCircle(Ox, Oy, r, vrelx, vrely, Sx, Sy);
-		if ((vrelx - Sx) * (vrelx - Sx) + (vrely - Sy) * (vrely - Sy) > a.maxAccMagnitude + b.maxAccMagnitude)
+		if ((vrelx - Sx) * (vrelx - Sx) + (vrely - Sy) * (vrely - Sy) > (a.maxAccMagnitude + b.maxAccMagnitude) * (a.maxAccMagnitude + b.maxAccMagnitude))
 		{
 			SetUVector(i, j, 0.f, 0.f);
 			return;
@@ -300,20 +306,11 @@ void ORCASolver::ComputeNewVelocities()
 			//a.nearbyAgents[j] == i shouldn't happen but just to be safe
 			if ((fabs(ux) > EPS || fabs(uy) > EPS) && a.nearbyAgents[j] != i)
 			{
-				float A = ux;
-				float B = uy;
-
-				asdasodkasokdaso
-				//TODO reverse thing tomorrow
-				//V_a + u / 2, direction is u
-				
+				float A = reversed ? ux : -ux;
+				float B = reversed ? uy : -uy;
+				//point: V_a + u / 2, direction is -u, or u when reversed
 				float C = A * (a.vx + ux * .5f) + B * (a.vy + uy * .5f);
-				if (A * a.vx + B * a.vy < C)
-				{
-					A = -A;
-					B = -B;
-					C = -C;
-				}
+				
 				solver.AddConstraintLinear(A, B, C);
 				UE_LOG(LogRVOTest, VeryVerbose, TEXT("i, j: %d %d"), i, j);
 

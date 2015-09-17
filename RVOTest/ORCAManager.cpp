@@ -6,6 +6,7 @@
 #include "AvoidanceComponent.h"
 #include <algorithm>
 
+//#include "TimerManager.h"
 
 
 bool CloserAgentComparator::operator()(uint16 leftId, uint16 rightId)
@@ -29,6 +30,8 @@ AORCAManager::AORCAManager()
 	FBalaRVOModule::Solver()->ClearAgents();
 
 	comp.solver = FBalaRVOModule::Solver();
+	UpdateInterval = 0.1f;
+	
 	//unitList.
 }
 
@@ -37,7 +40,15 @@ void AORCAManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
+
+	//GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AORCAManager::UpdatingDelegate), UpdateInterval, true);
+
 	
+}
+
+void AORCAManager::UpdatingDelegate()
+{
+	SimulateORCA(UpdateInterval);
 }
 
 // Called every frame
@@ -46,6 +57,12 @@ void AORCAManager::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 
+	SimulateORCA(DeltaTime);
+}
+
+
+void AORCAManager::SimulateORCA(float DeltaTime)
+{
 	solver = FBalaRVOModule::Solver();
 
 	solver->ClearAgents();
@@ -59,10 +76,10 @@ void AORCAManager::Tick(float DeltaTime)
 		FVector2D pos{ av->pawn->GetActorLocation() };
 
 		FVector2D vel{ av->pawn->GetVelocity() };
-		
-		
+
+
 		FVector2D PreferredVelocity = av->GetPreferredVelocity();
-		
+
 		if (PreferredVelocity.ContainsNaN())
 		{
 			UE_LOG(LogRVOTest, VeryVerbose, TEXT("AvoidanceComponent:: TICK , preferredvelocity: %f %f"), PreferredVelocity.X, PreferredVelocity.Y);
@@ -70,19 +87,19 @@ void AORCAManager::Tick(float DeltaTime)
 
 		}
 		Agent agent{ pos.X, pos.Y, vel.X, vel.Y, av->radius, PreferredVelocity.X, PreferredVelocity.Y, av->MaxVelocity, av->MaxAcceleration * DeltaTime };
-		
+
 		solver->GetAgent(solver->AddAgent()) = agent;
 
 	}
 
 	CalculateNearest();
 
-		
-	
+
+
 
 	solver->ComputeNewVelocities();
 
-	
+
 	int id = -1;
 	for (UAvoidanceComponent* av : units)
 	{
@@ -94,8 +111,11 @@ void AORCAManager::Tick(float DeltaTime)
 
 		Agent& agent = solver->GetAgent(id);
 
-		
-		av->SetNewAvoidanceVelocity(FVector2D{ agent.vx_new, agent.vy_new });
+		FVector input{ agent.vx_new - agent.vx, agent.vy_new - agent.vy, 0.f };
+		FVector inputDir;
+		float inputLength;
+		input.ToDirectionAndLength(inputDir, inputLength);
+		av->SetNewAvoidanceVelocity(FVector2D{ agent.vx_new, agent.vy_new }, FVector2D{ inputDir }, inputLength / agent.maxAccMagnitude);
 
 		UE_LOG(LogRVOTest, VeryVerbose, TEXT("orcaman:: new vel: %f %f"), agent.vx_new, agent.vy_new);
 
@@ -103,11 +123,13 @@ void AORCAManager::Tick(float DeltaTime)
 		if (FVector2D{ agent.vx_new, agent.vy_new }.ContainsNaN())
 		{
 			UE_LOG(LogRVOTest, VeryVerbose, TEXT("BAM ORCAMan szivas"));
-			
+
 		}
 
-		
+
 	}
+
+
 }
 
 
@@ -133,12 +155,6 @@ void AORCAManager::DeRegisterAvoidanceComponent(UAvoidanceComponent* ac)
 }
 
 
-void AORCAManager::SimulateORCA()
-{
-	
-
-	
-}
 
 void AORCAManager::bruteCalculateNearest()
 {
