@@ -101,7 +101,7 @@ void ORCASolver::SetUVector(int i, int j, float ux, float uy, bool reversed)
 	}
 }
 
-ORCASolver::ORCASolver() : T{ 2.f }, num{ 0 }
+ORCASolver::ORCASolver() : T{ CA_TAU }, num{ 0 }
 {
 }
 
@@ -222,14 +222,15 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 	
 	if (Npx * vrelx + Npy * vrely > 0 || Nqx * vrelx + Nqy * vrely > 0)
 	{
-		SetUVector(i, j, 0.f, 0.f);
-		return;
+		/*SetUVector(i, j, 0.f, 0.f);
+		return;*/
 		/*if (Npx * vrelx + Npy * vrely > a.maxAccMagnitude + b.maxAccMagnitude || Nqx * vrelx + Nqy * vrely > a.maxAccMagnitude + b.maxAccMagnitude )
 		{
 			SetUVector(i, j, 0.f, 0.f);
 			return;
 		}
 		reversed = true;*/
+		reversed = true;
 		
 	}
 
@@ -262,8 +263,8 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 	}
 	else
 	{
-		SetUVector(i, j, 0.f, 0.f);
-		return;
+		/*SetUVector(i, j, 0.f, 0.f);
+		return;*/
 		/*BMU::OrthogonalProjectionOfPointOnCircle(Ox, Oy, r, vrelx, vrely, Sx, Sy);
 		if ((vrelx - Sx) * (vrelx - Sx) + (vrely - Sy) * (vrely - Sy) > (a.maxAccMagnitude + b.maxAccMagnitude) * (a.maxAccMagnitude + b.maxAccMagnitude))
 		{
@@ -271,9 +272,11 @@ void ORCASolver::computeSmallestChangeVectors(int i, int j)
 			return;
 		}
 		reversed = true;*/
+		BMU::OrthogonalProjectionOfPointOnCircle(Ox, Oy, r, vrelx, vrely, Sx, Sy);
+		reversed = true;
 	}
 
-	SetUVector(i, j, Sx - vrelx, Sy - vrely);
+	SetUVector(i, j, Sx - vrelx, Sy - vrely, reversed);
 }
 
 void ORCASolver::ComputeNewVelocities()
@@ -309,8 +312,13 @@ void ORCASolver::ComputeNewVelocities()
 				float A = reversed ? ux : -ux;
 				float B = reversed ? uy : -uy;
 				//point: V_a + u / 2, direction is -u, or u when reversed
-				float C = A * (a.vx + ux * .5f) + B * (a.vy + uy * .5f);
 				
+				float C = A * (a.vx + ux * .5f) + B * (a.vy + uy * .5f);
+				if (reversed)
+				{
+					C = A * (a.vx + ux) + B * (a.vy + uy);
+				}
+
 				solver.AddConstraintLinear(A, B, C);
 				UE_LOG(LogRVOTest, VeryVerbose, TEXT("i, j: %d %d"), i, j);
 

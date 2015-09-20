@@ -7,7 +7,9 @@
 
 #define CA_MAXAGENTS (400)
 
-#define CA_MAXNEARBY (5)
+#define CA_MAXNEARBY (6)
+
+#define CA_TAU (2.f)
 
 
 struct Agent

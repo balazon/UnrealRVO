@@ -40,10 +40,16 @@ void AORCAManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
-
+	//GetWorld()->gamemode
+	//FTimerDelegate::CreateUObject
 	//GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AORCAManager::UpdatingDelegate), UpdateInterval, true);
 
 	
+}
+
+void AORCAManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	//GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 }
 
 void AORCAManager::UpdatingDelegate()

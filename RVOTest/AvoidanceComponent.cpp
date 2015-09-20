@@ -30,6 +30,8 @@ UAvoidanceComponent::UAvoidanceComponent()
 	bStuck = false;
 
 	bDetour = false;
+
+	
 	// ...
 }
 
@@ -40,7 +42,8 @@ void UAvoidanceComponent::Activate(bool bReset)
 	pawn = Cast<APawn>(GetOwner());
 
 	mc = pawn->GetMovementComponent();
-
+	
+	
 	
 	
 	for (TActorIterator<AActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -93,10 +96,11 @@ void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity, FVector
 	mc->RequestDirectMove(FVector{ newVelocity, 0.f }, false);
 	//mc->UpdateComponentVelocity();
 	
-	FVector2D Vpref = GetPreferredVelocity();
-
 	
-	if (!bDetour && Vpref.SizeSquared() > MaxVelocity / 2.f && newVelocity.SizeSquared() < 1.f)
+	//FVector2D Vpref = GetPreferredVelocity();
+
+	/*
+	if (!bDetour && Vpref.SizeSquared() > MaxVelocity  * MaxVelocity / 4.f && newVelocity.SizeSquared() < 1.f)
 	{
 		bStuck = true;
 	}
@@ -104,7 +108,7 @@ void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity, FVector
 	{
 		bStuck = false;
 		stuckTimer = 3.f;
-	}
+	}*/
 
 	
 	
@@ -114,29 +118,7 @@ void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity, FVector
 
 	
 	
-	/*ACharacter* mychar = Cast<ACharacter>(pawn);*/
 	
-
-	/*float v_angle = atan2f(inputDir.Y, inputDir.X);
-	
-	if (inputScale < 1.f)
-	{
-		v_angle = angle;
-	}
-	else
-	{
-		
-		angle = v_angle;
-	}*/
-	
-
-	//UE_LOG(LogRVOTest, Warning, TEXT("angles: %f %f"), v_angle, angle);
-	
-	//pawn->SetActorRotation(FRotator{ 0.f, v_angle * 57.296f, 0.f });
-	
-	
-
-	//newVel = newVelocity;
 }
 
 FVector2D UAvoidanceComponent::GetPreferredVelocity()
@@ -201,7 +183,7 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 		}
 	}
 
-	//SetNewAvoidanceVelocity(newVel);
+	
 	//pawn->AddMovementInput(inputDir, inputL);
 	//mc->AddInputVector
 	

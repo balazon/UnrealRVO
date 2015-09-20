@@ -14,7 +14,7 @@
 #include "ORCASolver.h"
 
 
-#define KD_MAXNEARBY (5)
+#define KD_MAXNEARBY (6)
 
 
 template <typename T>
