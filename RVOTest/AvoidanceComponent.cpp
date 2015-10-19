@@ -92,8 +92,17 @@ void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity, FVector
 	UE_LOG(LogRVOTest, VeryVerbose, TEXT("uav component:: set new vel, old:  %f %f, new : %f %f %f"), mc->Velocity.X, mc->Velocity.Y, mc->Velocity.Z, newVelocity.X, newVelocity.Y);
 
 	//mc->Velocity = FVector{ newVelocity, 0.f };
-	
+	newVel = newVelocity;
 	mc->RequestDirectMove(FVector{ newVelocity, 0.f }, false);
+	
+	//PostProcessAvoidanceVelocity
+	//UCharacterMovementComponent* asd;
+	
+	
+	//UFloatingPawnMovement* floating;
+
+	
+	
 	//mc->UpdateComponentVelocity();
 	
 	
@@ -148,6 +157,11 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 	
+
+	mc->RequestDirectMove(FVector{ newVel, 0.f }, false);
+
+	return;
+
 	if (bDetour)
 	{
 		stuckTimer -= DeltaTime;

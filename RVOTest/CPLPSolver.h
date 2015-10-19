@@ -3,13 +3,6 @@
 #pragma once
 
 
-//class RVOTEST_API CPLPSolver
-//{
-//public:
-//	CPLPSolver();
-//	~CPLPSolver();
-//};
-
 
 
 

@@ -3,13 +3,7 @@
 #include "RVOTest.h"
 #include "CPLPSolver.h"
 
-//CPLPSolver::CPLPSolver()
-//{
-//}
-//
-//CPLPSolver::~CPLPSolver()
-//{
-//}
+
 
 
 
@@ -188,14 +182,14 @@ bool CPLPSolver::pointSatisfiesConstraints(float tx, float ty, int n, float d, b
 		{
 			if (debug)
 			{
-				UE_LOG(LogRVOTest, Warning, TEXT("pointsatisfies: false"))
+				UE_LOG(LogRVOTest, Warning, TEXT("pointsatisfies: false"));
 			}
 			return false;
 		}
 	}
 	if (debug)
 	{
-		UE_LOG(LogRVOTest, Warning, TEXT("pointsatisfies: true"))
+		UE_LOG(LogRVOTest, Warning, TEXT("pointsatisfies: true"));
 	}
 	return true;
 }
@@ -366,7 +360,7 @@ void CPLPSolver::Solve(float& resX, float& resY)
 			resY = ty;
 			if (BMU::isnanf(resX) || BMU::isnanf(resY))
 			{
-				UE_LOG(LogRVOTest, Warning, TEXT("cplpsolver::solve  %f %f %f %f %f"), constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
+				UE_LOG(LogRVOTest, Warning, TEXT("cplpsolver::solve  %f %f %f %f %f %f %f"), constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
 			}
 		}
 		
@@ -543,7 +537,7 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 			resY = ty;
 			if (BMU::isnanf(resX) || BMU::isnanf(resY))
 			{
-				UE_LOG(LogRVOTest, Warning, TEXT("params: %f %f %f %f %f"), constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
+				UE_LOG(LogRVOTest, Warning, TEXT("params: %f %f %f %f %f %f %f"), constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
 			}
 		}
 

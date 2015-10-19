@@ -2,10 +2,30 @@
 
 #pragma once
 
-#include "RVOTest.h"
+#define UE_BUILD
+
+
+
+#ifndef UE_BUILD
+
+class LogRVOTest;
+
+#define VeryVerbose (4)
+#define Warning (5)
+#define LogLevel (5)
+#define TEXT(x) x
+#define UE_LOG(x, y, ...) if(y >= LogLevel) printf(__VA_ARGS__)
+#include <cstdio>
+
+#endif
+
+
 
 #include <cmath>
 #include <utility>
+
+
+
 
 //bmu for bala math utils
 namespace BMU
@@ -47,7 +67,7 @@ namespace BMU
 
 	bool inline isnanf(float k)
 	{
-		return isnan(k) || !std::isfinite(k);
+		return std::isnan(k) || !std::isfinite(k);
 	}
 
 
@@ -74,7 +94,7 @@ namespace BMU
 	void inline OrthogonalProjectionOfPointOnLine(float A, float B, float C, float tx, float ty, float& resX, float& resY)
 	{
 		if (debug)
-		UE_LOG(LogRVOTest, Warning, TEXT("oppl params: %f %f %f %f %f"), A, B, C, tx, ty);
+			UE_LOG(LogRVOTest, Warning, TEXT("oppl params: %f %f %f %f %f"), A, B, C, tx, ty);
 
 		float denominator = A * A + B * B;
 		resX = (B * B * tx - A * B * ty + A * C) / denominator;
@@ -88,7 +108,7 @@ namespace BMU
 	bool inline QuadraticEquation(float a, float b, float c, float& x1, float& x2)
 	{
 		if (debug)
-		UE_LOG(LogRVOTest, Warning, TEXT("qe params: %f %f %f"), a, b, c);
+			UE_LOG(LogRVOTest, Warning, TEXT("qe params: %f %f %f"), a, b, c);
 
 
 		float D;
@@ -123,9 +143,9 @@ namespace BMU
 	bool inline IntersectLineCircle(float A, float B, float C, float u, float v, float r, float& x1, float& y1, float& x2, float& y2)
 	{
 		if (debug)
-		UE_LOG(LogRVOTest, Warning, TEXT("ilc params: %f %f %f %f %f %f"), A, B, C, u, v, r);
+			UE_LOG(LogRVOTest, Warning, TEXT("ilc params: %f %f %f %f %f %f"), A, B, C, u, v, r);
 
-		
+
 		if (fabs(A) < EPS && fabs(B) < EPS)
 		{
 			UE_LOG(LogRVOTest, VeryVerbose, TEXT("ilc params: %f %f %f %f %f %f"), A, B, C, u, v, r);
@@ -148,8 +168,8 @@ namespace BMU
 
 		if (debug)
 			UE_LOG(LogRVOTest, Warning, TEXT("ilc x1 y1 x2 y2 %f %f %f %f"), x1, y1, x2, y2);
-		
-			
+
+
 
 		OrthogonalProjectionOfPointOnCircle(u, v, r, x1, y1, x1, y1);
 		OrthogonalProjectionOfPointOnCircle(u, v, r, x2, y2, x2, y2);
@@ -173,8 +193,12 @@ namespace BMU
 		float A = u1 - u2;
 		float B = v1 - v2;
 		float C = .5f * ((r2 + r1) * (r2 - r1) + (u1 + u2) * (u1 - u2) + (v1 + v2) * (v1 - v2));
-
-		float lrec = 1.f / sqrtf(A * A + B * B);
+		float uvdist = sqrtf(A * A + B * B);
+		if (fabs(r1 - r2) > uvdist || uvdist > r1 + r2)
+		{
+			return false;
+		}
+		float lrec = 1.f / uvdist;
 		A *= lrec;
 		B *= lrec;
 		C *= lrec;
@@ -188,7 +212,7 @@ namespace BMU
 	bool inline OrthogonalProjectionOfPointOnCircle(float u, float v, float r, float tx, float ty, float& resX, float& resY)
 	{
 		if (debug)
-		UE_LOG(LogRVOTest, Warning, TEXT("oppc params: %f %f %f %f %f"), u, v, r, tx, ty);
+			UE_LOG(LogRVOTest, Warning, TEXT("oppc params: %f %f %f %f %f"), u, v, r, tx, ty);
 
 		float OTx = tx - u;
 		float OTy = ty - v;
