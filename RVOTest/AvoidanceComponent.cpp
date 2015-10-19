@@ -142,7 +142,7 @@ FVector2D UAvoidanceComponent::GetPreferredVelocity()
 	float k = sqrDist < 10000.f ? sqrDist * 1.19047619e-4f - 0.19047619f : 1.f;
 
 	FVector2D res = ToTarget.GetSafeNormal() * MaxVelocity * k;
-
+	
 	if (res.ContainsNaN())
 	{
 		UE_LOG(LogRVOTest, VeryVerbose, TEXT("UAvoidanceComp:: GetPreferredV , %f %f"), res.X, res.Y);

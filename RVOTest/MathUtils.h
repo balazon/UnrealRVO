@@ -67,7 +67,7 @@ namespace BMU
 
 	bool inline isnanf(float k)
 	{
-		return std::isnan(k) || !std::isfinite(k);
+		return std::isnan(k) || !std::isfinite(k) || !std::isnormal(k) && k != 0.f || fabs(k) > 999999.f;
 	}
 
 
