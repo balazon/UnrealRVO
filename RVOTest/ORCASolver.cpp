@@ -53,24 +53,17 @@ void ORCASolver::SetAgentsNearby(int i, int j)
 	a.nearbyCount++;
 }
 
-bool ORCASolver::AreAgentsNeighbours(int i, int j)
+bool ORCASolver::IsAgentNeighbour(int i, int j)
 {
-	UE_LOG(LogRVOTest, VeryVerbose, TEXT("agentsneighbours %d %d"), i, j);
-
 	Agent& a = agents[i];
-	Agent& b = agents[j];
-	int aNearby = a.nearbyCount;
-	int bNearby = b.nearbyCount;
-	int maxN = aNearby < bNearby ? bNearby : aNearby;
-	for (int k = 0; k < maxN; k++)
+	for (int k = 0; k < a.nearbyCount; k++)
 	{
-		if (k < aNearby && a.nearbyAgents[k] == j || k < bNearby && b.nearbyAgents[k] == i)
+		if (a.nearbyAgents[k] == j)
 		{
-			UE_LOG(LogRVOTest, VeryVerbose, TEXT("agentsneighbours true"));
+			
 			return true;
 		}
 	}
-	UE_LOG(LogRVOTest, VeryVerbose, TEXT("agentsneighbours false"));
 	return false;
 }
 
@@ -85,7 +78,9 @@ void ORCASolver::SetORCAConstraint(Agent& a, int j, float A, float B, float C)
 			a.ORCAA[i] = A;
 			a.ORCAB[i] = B;
 			a.ORCAC[i] = C;
-			break;
+			//UE_LOG(LogRVOTest, Warning, TEXT(" i %d"), j);
+
+			return;
 		}
 	}
 }
@@ -229,14 +224,14 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 	if (Npx * vrelx + Npy * vrely > 0 || Nqx * vrelx + Nqy * vrely > 0)
 	{
 		//no chance for collision in this frame
-		if (Npx * vrelx + Npy * vrely > a.maxAccMagnitude + b.maxAccMagnitude || Nqx * vrelx + Nqy * vrely > a.maxAccMagnitude + b.maxAccMagnitude )
+		/*if (Npx * vrelx + Npy * vrely > a.maxAccMagnitude + b.maxAccMagnitude || Nqx * vrelx + Nqy * vrely > a.maxAccMagnitude + b.maxAccMagnitude )
 		{
 			SetORCAConstraint(a, j, 0.f, 0.f, 0.f);
 
 			SetORCAConstraint(b, i, 0.f, 0.f, 0.f);
 
 			return;
-		}
+		}*/
 		outside = true;
 
 	}
@@ -286,18 +281,20 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 
 
 		//no chance for collision in this frame
-		if (outside && (vrelx - Sx) * (vrelx - Sx) + (vrely - Sy) * (vrely - Sy) > (a.maxAccMagnitude + b.maxAccMagnitude) * (a.maxAccMagnitude + b.maxAccMagnitude))
+		/*if (outside && (vrelx - Sx) * (vrelx - Sx) + (vrely - Sy) * (vrely - Sy) > (a.maxAccMagnitude + b.maxAccMagnitude) * (a.maxAccMagnitude + b.maxAccMagnitude))
 		{
 			SetORCAConstraint(a, j, 0.f, 0.f, 0.f);
 
 			SetORCAConstraint(b, i, 0.f, 0.f, 0.f);
 
 			return;
-		}
+		}*/
+
+		float Nlrec = 1.f / sqrtf(Nx * Nx + Ny * Ny);
+		Nx *= Nlrec;
+		Ny *= Nlrec;
 	}
-	float Nlrec = 1.f / sqrtf(Nx * Nx + Ny * Ny);
-	Nx *= Nlrec;
-	Ny *= Nlrec;
+	
 
 	if (fabs(Nx) < EPS && fabs(Ny) < EPS || BMU::isnanf(Nx) || BMU::isnanf(Ny))
 	{
@@ -312,6 +309,8 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 		ux *= .5f;
 		uy *= .5f;
 	}
+	ux += Nx * 1.f;
+	uy += Ny * 1.f;
 
 	float A1, B1, C1, A2, B2, C2;
 	A1 = -Nx; B1 = -Ny; C1 = -Nx * (a.vx + ux) - Ny * (a.vy + uy);
@@ -327,6 +326,7 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 	*/
 
 	
+	//UE_LOG(LogRVOTest, Warning, TEXT("ij: %d %d \n"), i, j);
 
 	SetORCAConstraint(a, j, A1, B1, C1);
 
@@ -344,10 +344,12 @@ void ORCASolver::ComputeNewVelocities()
 			int j = a.nearbyAgents[k];
 
 			//TODO what changes when i < j is replaced with true?
-			if (i < j)
+			if (i < j || !IsAgentNeighbour(j, i))
 			{
 				
 				computeORCAConstraints(i, j);
+				//UE_LOG(LogRVOTest, Warning, TEXT("compute after ij: %d %d \n"), i, j);
+
 			}
 		}
 		
@@ -367,7 +369,28 @@ void ORCASolver::ComputeNewVelocities()
 				continue;
 			}
 
-			
+			if (BMU::isnanf(A) || BMU::isnanf(B) || BMU::isnanf(C))
+			{
+				UE_LOG(LogRVOTest, Warning, TEXT("NAN ij: %d %d, ABC: %f %f %f"), i, a.nearbyAgents[j], A, B, C);
+
+				UE_LOG(LogRVOTest, Warning, TEXT("NAN i: %d near: "), i);
+
+				for (int k = 0; k < a.nearbyCount; k++)
+				{
+					UE_LOG(LogRVOTest, Warning, TEXT(" %d"), a.nearbyAgents[k]);
+
+				}
+				
+				UE_LOG(LogRVOTest, Warning, TEXT("NAN j: %d near: "), a.nearbyAgents[j]);
+
+				for (int k = 0; k < a.nearbyCount; k++)
+				{
+					UE_LOG(LogRVOTest, Warning, TEXT(" %d"), agents[a.nearbyAgents[j]].nearbyAgents[k]);
+
+				}
+				
+			}
+
 			UE_LOG(LogRVOTest, VeryVerbose, TEXT("vxpref %f %f"), a.vx_pref, a.vy_pref);
 
 			solver.AddConstraintLinear(A, B, C);
@@ -384,11 +407,11 @@ void ORCASolver::ComputeNewVelocities()
 
 
 
-		if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2 * EPS))
+		if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2.f * EPS))
 		{
 			
-			a.vx_new *= 0.99f;
-			a.vy_new *= 0.99f;
+			a.vx_new *= 0.999f;
+			a.vy_new *= 0.999f;
 
 			if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2 * EPS))
 			{
@@ -406,7 +429,7 @@ void ORCASolver::ComputeNewVelocities()
 
 		float axnew = a.vx_new - a.vx;
 		float aynew = a.vy_new - a.vy;
-		if (axnew * axnew + aynew * aynew > a.maxAccMagnitude)
+		if (axnew * axnew + aynew * aynew > a.maxAccMagnitude * (a.maxAccMagnitude + 2.f * EPS))
 		{
 
 			axnew *= 0.99f;
@@ -431,7 +454,7 @@ void ORCASolver::ComputeNewVelocities()
 		{
 			//FString dir{ "D:/Bala/Unreal Projects/RVOTest/test.svg" };
 			
-			//SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/test.svg", this, num, i);
+			SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/test.svg", this, num, i);
 			UE_LOG(LogRVOTest, Warning, TEXT("BAM\n"));
 			UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);
 			UE_LOG(LogRVOTest, Warning, TEXT("a.v %f %f, a.vnew %f %f, a.maxacc : %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxAccMagnitude);

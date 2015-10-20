@@ -53,7 +53,9 @@ public:
 
 	void ClearNeighbours(int i);
 	void SetAgentsNearby(int i, int j);
-	bool AreAgentsNeighbours(int i, int j);
+
+	// is j a neighbour of i (true does not imply i is a neighbour of j)
+	bool IsAgentNeighbour(int i, int j);
 
 
 	void SetORCAConstraint(Agent& a, int j, float A, float B, float C);

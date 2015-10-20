@@ -43,7 +43,7 @@ void CPLPSolver::AddConstraintLinear(float A, float B, float C, bool fixed)
 		UE_LOG(LogRVOTest, Warning, TEXT("BAMM"));
 	}*/
 	float lrec = 1.f / sqrtf(A * A + B * B);
-	UE_LOG(LogRVOTest, Warning, TEXT("addcl %f %f %f lrec: %f"), A, B, C, lrec);
+	//UE_LOG(LogRVOTest, Warning, TEXT("addcl %f %f %f lrec: %f"), A, B, C, lrec);
 
 	constraints.reserve(constraints.size() + 3);
 	constraints.push_back(A * lrec);
