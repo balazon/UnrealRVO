@@ -38,14 +38,14 @@ void CPLPSolver::Reset()
 
 void CPLPSolver::AddConstraintLinear(float A, float B, float C, bool fixed)
 {
-	if (fabs(A) < EPS && fabs(B) < EPS || BMU::isnanf(A) || BMU::isnanf(B) || BMU::isnanf(C))
+	/*if (fabs(A) < EPS && fabs(B) < EPS || BMU::isnanf(A) || BMU::isnanf(B) || BMU::isnanf(C))
 	{
 		UE_LOG(LogRVOTest, Warning, TEXT("BAMM"));
-	}
+	}*/
 	float lrec = 1.f / sqrtf(A * A + B * B);
 	UE_LOG(LogRVOTest, Warning, TEXT("addcl %f %f %f lrec: %f"), A, B, C, lrec);
 
-	//constraints.reserve(constraints.size() + 3);
+	constraints.reserve(constraints.size() + 3);
 	constraints.push_back(A * lrec);
 	constraints.push_back(B * lrec);
 	constraints.push_back(C * lrec);
@@ -221,7 +221,7 @@ void CPLPSolver::createRandomOrder()
 	{
 		order.push_back(i);
 	}
-	//std::random_shuffle(order.begin() + fixedElementsNum, order.end());
+	std::random_shuffle(order.begin() + fixedElementsNum, order.end());
 }
 
 void CPLPSolver::normalizeLinearConstraints()

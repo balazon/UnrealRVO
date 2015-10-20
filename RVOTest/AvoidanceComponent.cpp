@@ -22,6 +22,10 @@ UAvoidanceComponent::UAvoidanceComponent()
 	MaxVelocity = 600.f;
 
 	MaxAcceleration = 2000.f;
+
+	AcceptanceSquared = 1600.f;
+
+	SlowdownSquared = 10000.f;
 	
 	bAutoActivate = true;
 
@@ -135,11 +139,20 @@ FVector2D UAvoidanceComponent::GetPreferredVelocity()
 	FVector2D ToTarget{ CurrentTarget - FVector2D{ pawn->GetActorLocation() } };
 
 	float sqrDist = ToTarget.SizeSquared();
-	if (sqrDist < 1600.f)
-		return FVector2D{};
 
 	
-	float k = sqrDist < 10000.f ? sqrDist * 1.19047619e-4f - 0.19047619f : 1.f;
+	if (sqrDist < AcceptanceSquared)
+		return FVector2D::ZeroVector;
+
+	float m = 1.f / (SlowdownSquared - AcceptanceSquared);
+
+	float b = -m * AcceptanceSquared;
+
+	float k = sqrDist < SlowdownSquared ? sqrDist * m + b : 1.f;
+	if (k < SMALL_NUMBER)
+	{
+		return FVector2D::ZeroVector;
+	}
 
 	FVector2D res = ToTarget.GetSafeNormal() * MaxVelocity * k;
 	

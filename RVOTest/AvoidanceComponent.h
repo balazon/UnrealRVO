@@ -40,6 +40,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
 	FVector2D CurrentTarget;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
+		float AcceptanceSquared;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
+		float SlowdownSquared;
+	
+
 	//UFUNCTION(BlueprintCallable, Category = Avoidance, meta = (DisplayName = "Get Current Avoidance Id"))
 	//void 
 
