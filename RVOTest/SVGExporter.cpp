@@ -36,10 +36,14 @@ int SVGExporter::writeUnitORCAs(std::string fileName, ORCASolver* solver, int nu
 	return exporter.writeUnitORCAs(solver, num, agentID, d);
 }
 
-int SVGExporter::writeUnits( ORCASolver* solver, int num)
+int SVGExporter::writeUnits(ORCASolver* solver, int num)
 {
 	startSvg(width, height);
 
+
+	Ox = 4.5f * 42.f;
+	Oy = 3.5f * 42.f;
+	scale = 1.f;
 
 	for (int i = 0; i < num; i++)
 	{
@@ -57,17 +61,17 @@ int SVGExporter::writeUnits( ORCASolver* solver, int num)
 int SVGExporter::writeUnitORCAs(ORCASolver* solver, int num, int agentID, float d)
 {
 	Agent& a = solver->GetAgent(agentID);
-	
-	
+
+
 
 	Ox = a.x;
 	Oy = a.y;
 	scale = 1.f;
 
-	
+
 	startSvg(width, height);
 
-	
+
 
 	writePoint(a.x, a.y, "black");
 
@@ -87,7 +91,7 @@ int SVGExporter::writeUnitORCAs(ORCASolver* solver, int num, int agentID, float 
 
 	writePoint(a.x + a.vx_new, a.y + a.vy_new, "green");
 
-	
+
 
 	writeVector(a.x, a.y, a.vx_pref, a.vy_pref);
 
@@ -95,7 +99,7 @@ int SVGExporter::writeUnitORCAs(ORCASolver* solver, int num, int agentID, float 
 
 	writeVector(a.x + a.vx, a.y + a.vy, a.vx_new - a.vx, a.vy_new - a.vy);
 
-	
+
 
 	endSvg();
 
@@ -192,8 +196,8 @@ void SVGExporter::transform(float x, float y, float& resX, float& resY)
 {
 
 
-	resX = x * scale - Ox + (float) width / 2.f;
-	resY = y * scale - Oy + (float) height / 2.f;
+	resX = x * scale - Ox + (float)width / 2.f;
+	resY = y * scale - Oy + (float)height / 2.f;
 
 }
 

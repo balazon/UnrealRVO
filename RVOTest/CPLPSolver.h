@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+
 
 #pragma once
 
@@ -41,6 +41,8 @@ public:
 	bool usedSafest;
 
 	float usedDInSafest;
+
+	void LogData();
 private:
 	//destination coordinates
 	float u, v;
@@ -84,7 +86,7 @@ private:
 	//std::vector<float> temp;
 
 	//uint8 linearProgram1D(const std::vector<float>&  )
-	
+
 };
 
 

@@ -10,7 +10,6 @@
 #include <cmath>
 #include <utility>
 
-
 #include "CPLPSolver.h"
 
 #include "SVGExporter.h"
@@ -60,7 +59,7 @@ bool ORCASolver::IsAgentNeighbour(int i, int j)
 	{
 		if (a.nearbyAgents[k] == j)
 		{
-			
+
 			return true;
 		}
 	}
@@ -170,7 +169,7 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 
 
 
-	
+
 
 	bool pqcircle = BMU::IntersectCircleCircle(ABx, ABy, R, ABx * .5f, ABy * .5f, .5f * sqrtf(ABx * ABx + ABy * ABy), Px, Py, Qx, Qy);
 	//this is needed because actual agent radiuses are usually smaller than what is set (1.5, or 2x actual size)
@@ -216,7 +215,7 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 	//G, H points are not needed, but they are O's orthogonal projections to AP, and AQ (or the little circle's touching point)
 	//they are the 'g' and 'h' in variable names below: Aog, Aoh, ..
 
-	
+
 
 
 	//outside QAP angle area
@@ -226,11 +225,11 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 		//no chance for collision in this frame
 		/*if (Npx * vrelx + Npy * vrely > a.maxAccMagnitude + b.maxAccMagnitude || Nqx * vrelx + Nqy * vrely > a.maxAccMagnitude + b.maxAccMagnitude )
 		{
-			SetORCAConstraint(a, j, 0.f, 0.f, 0.f);
+		SetORCAConstraint(a, j, 0.f, 0.f, 0.f);
 
-			SetORCAConstraint(b, i, 0.f, 0.f, 0.f);
+		SetORCAConstraint(b, i, 0.f, 0.f, 0.f);
 
-			return;
+		return;
 		}*/
 		outside = true;
 
@@ -283,18 +282,18 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 		//no chance for collision in this frame
 		/*if (outside && (vrelx - Sx) * (vrelx - Sx) + (vrely - Sy) * (vrely - Sy) > (a.maxAccMagnitude + b.maxAccMagnitude) * (a.maxAccMagnitude + b.maxAccMagnitude))
 		{
-			SetORCAConstraint(a, j, 0.f, 0.f, 0.f);
+		SetORCAConstraint(a, j, 0.f, 0.f, 0.f);
 
-			SetORCAConstraint(b, i, 0.f, 0.f, 0.f);
+		SetORCAConstraint(b, i, 0.f, 0.f, 0.f);
 
-			return;
+		return;
 		}*/
 
 		float Nlrec = 1.f / sqrtf(Nx * Nx + Ny * Ny);
 		Nx *= Nlrec;
 		Ny *= Nlrec;
 	}
-	
+
 
 	if (fabs(Nx) < EPS && fabs(Ny) < EPS || BMU::isnanf(Nx) || BMU::isnanf(Ny))
 	{
@@ -315,7 +314,7 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 	float A1, B1, C1, A2, B2, C2;
 	A1 = -Nx; B1 = -Ny; C1 = -Nx * (a.vx + ux) - Ny * (a.vy + uy);
 	A2 = Nx; B2 = Ny; C2 = Nx * (b.vx - ux) + Ny * (b.vy - uy);
-	
+
 
 	UE_LOG(LogRVOTest, VeryVerbose, TEXT("ij: %d %d, \n  %.2f, %.2f, %.2f \n  %.2f, %.2f, %.2f\n"), i, j, A1, B1, C1, A2, B2, C2);
 	/*UE_LOG(LogRVOTest, Warning, TEXT("u: %.2f %.2f\n"), ux, uy);
@@ -325,7 +324,7 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 	UE_LOG(LogRVOTest, Warning, TEXT("b.v - u %.2f %.2f\n\n"), b.vx - ux, b.vy - uy);
 	*/
 
-	
+
 	//UE_LOG(LogRVOTest, Warning, TEXT("ij: %d %d \n"), i, j);
 
 	SetORCAConstraint(a, j, A1, B1, C1);
@@ -346,13 +345,13 @@ void ORCASolver::ComputeNewVelocities()
 			//TODO what changes when i < j is replaced with true?
 			if (i < j || !IsAgentNeighbour(j, i))
 			{
-				
+
 				computeORCAConstraints(i, j);
 				//UE_LOG(LogRVOTest, Warning, TEXT("compute after ij: %d %d \n"), i, j);
 
 			}
 		}
-		
+
 
 		solver.Reset();
 		UE_LOG(LogRVOTest, VeryVerbose, TEXT("vxpref %f %f"), a.vx_pref, a.vy_pref);
@@ -362,9 +361,9 @@ void ORCASolver::ComputeNewVelocities()
 			float A = a.ORCAA[j];
 			float B = a.ORCAB[j];
 			float C = a.ORCAC[j];
-			
+
 			//a.nearbyAgents[j] == i shouldn't happen but just to be safe
-			if (fabs(A) < EPS && fabs(B) < EPS || a.nearbyAgents[j] == i )
+			if (fabs(A) < EPS && fabs(B) < EPS || a.nearbyAgents[j] == i)
 			{
 				continue;
 			}
@@ -380,7 +379,7 @@ void ORCASolver::ComputeNewVelocities()
 					UE_LOG(LogRVOTest, Warning, TEXT(" %d"), a.nearbyAgents[k]);
 
 				}
-				
+
 				UE_LOG(LogRVOTest, Warning, TEXT("NAN j: %d near: "), a.nearbyAgents[j]);
 
 				for (int k = 0; k < a.nearbyCount; k++)
@@ -388,7 +387,7 @@ void ORCASolver::ComputeNewVelocities()
 					UE_LOG(LogRVOTest, Warning, TEXT(" %d"), agents[a.nearbyAgents[j]].nearbyAgents[k]);
 
 				}
-				
+
 			}
 
 			UE_LOG(LogRVOTest, VeryVerbose, TEXT("vxpref %f %f"), a.vx_pref, a.vy_pref);
@@ -407,14 +406,32 @@ void ORCASolver::ComputeNewVelocities()
 
 		if (solver.usedSafest)
 		{
-			for (int i = 0; i < 10.f)
-			SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/test.svg", this, num, i);
+			float d = solver.usedDInSafest;
+			for (int j = 0; j < 11; j++)
+			{
+				float printd = d * (float)j / 10.f;
+
+				char buffer[5];
+				sprintf(buffer, "%d", j);
+				SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/test" + std::string{ buffer } +".svg", this, num, i, printd);
+			}
+
+			UE_LOG(LogRVOTest, Warning, TEXT("SVG's done a.vnew %f %f"), a.vx_new, a.vy_new);
+			solver.Solve(a.vx_new, a.vy_new);
+			UE_LOG(LogRVOTest, Warning, TEXT("again: a.vnew %f %f"), a.vx_new, a.vy_new);
+
+			BMU::debug = true;
+			solver.debug = true;
+			solver.Solve(a.vx_new, a.vy_new);
+			BMU::debug = false;
+			solver.debug = false;
+			UE_LOG(LogRVOTest, Warning, TEXT("with debug: a.vnew %f %f"), a.vx_new, a.vy_new);
 		}
 
 
 		if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2.f * EPS))
 		{
-			
+
 			a.vx_new *= 0.999f;
 			a.vy_new *= 0.999f;
 
@@ -458,7 +475,7 @@ void ORCASolver::ComputeNewVelocities()
 		if (BMU::isnanf(a.vx_new) || BMU::isnanf(a.vy_new))
 		{
 			//FString dir{ "D:/Bala/Unreal Projects/RVOTest/test.svg" };
-			
+
 			SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/test.svg", this, num, i);
 			UE_LOG(LogRVOTest, Warning, TEXT("BAM\n"));
 			UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);

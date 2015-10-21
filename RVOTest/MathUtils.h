@@ -14,7 +14,7 @@ class LogRVOTest;
 #define Warning (5)
 #define LogLevel (5)
 #define TEXT(x) x
-#define UE_LOG(x, y, ...) if(y >= LogLevel) printf(__VA_ARGS__)
+#define UE_LOG(x, y, ...) if(y >= LogLevel) {printf(__VA_ARGS__); printf("\n");}
 #include <cstdio>
 
 #endif
@@ -227,6 +227,11 @@ namespace BMU
 		if (isnanf(resX) || isnanf(resY))
 		{
 			UE_LOG(LogRVOTest, Warning, TEXT("oppc params: %f %f %f %f %f"), u, v, r, tx, ty);
+		}
+
+		if (debug)
+		{
+			UE_LOG(LogRVOTest, Warning, TEXT("oppc rx ry: %f %f"), resX, resY);
 		}
 
 		return true;

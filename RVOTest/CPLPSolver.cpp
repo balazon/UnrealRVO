@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "RVOTest.h"
 #include "CPLPSolver.h"
 
@@ -14,14 +12,41 @@
 
 #include "MathUtils.h"
 
+//for debugging
+void printArray(std::vector<float>& arr)
+{
+	std::cout << "tomb: ";
+	for (int i = 0; i < arr.size(); i++)
+	{
 
-CPLPSolver::CPLPSolver() : debug{ false }, fixedElementsNum{0}
+		std::cout << arr[i];
+		if (i % 3 == 2)
+			std::cout << ", ";
+		else
+			std::cout << " ";
+	}
+	std::cout << "\n";
+}
+
+//for debugging
+void printOrder(std::vector<int>& order)
+{
+	std::cout << "order: ";
+	for (int i = 0; i < order.size(); i++)
+	{
+		std::cout << order[i] << " ";
+	}
+	std::cout << "\n";
+}
+
+
+CPLPSolver::CPLPSolver() : debug{ false }, fixedElementsNum{ 0 }
 {
 	constraints.reserve(30);
 	constraintTypes.reserve(30);
 	order.reserve(30);
 
-	
+
 }
 
 CPLPSolver::~CPLPSolver()
@@ -36,11 +61,55 @@ void CPLPSolver::Reset()
 	fixedElementsNum = 0;
 }
 
+void CPLPSolver::LogData()
+{
+	UE_LOG(LogRVOTest, Warning, TEXT("\n\nCPLP Data:\n\n"));
+
+
+	printOrder(order);
+
+	if (order.size() == 0)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("no random order generated"), u, v);
+	}
+
+	UE_LOG(LogRVOTest, Warning, TEXT("u v : %f %f  "), u, v);
+
+	UE_LOG(LogRVOTest, Warning, TEXT("All constraints: "));
+
+	for (int i = 0; i < constraints.size() / 3; i++)
+	{
+
+		int id;
+		if (order.size() == 0)
+		{
+			id = i;
+		}
+		else
+		{
+			id = order[i];
+		}
+		int pos = id * 3;
+		if (constraintTypes[id] == CT_LINEAR)
+		{
+			UE_LOG(LogRVOTest, Warning, TEXT("%d lin( %f, %f, %f )"), id, constraints[pos], constraints[pos + 1], constraints[pos + 2]);
+		}
+		else
+		{
+			UE_LOG(LogRVOTest, Warning, TEXT("%d cir( %f, %f, %f )"), id, constraints[pos], constraints[pos + 1], constraints[pos + 2]);
+		}
+
+	}
+	UE_LOG(LogRVOTest, Warning, TEXT("\nCPLP Data End:\n\n"));
+
+
+}
+
 void CPLPSolver::AddConstraintLinear(float A, float B, float C, bool fixed)
 {
 	/*if (fabs(A) < EPS && fabs(B) < EPS || BMU::isnanf(A) || BMU::isnanf(B) || BMU::isnanf(C))
 	{
-		UE_LOG(LogRVOTest, Warning, TEXT("BAMM"));
+	UE_LOG(LogRVOTest, Warning, TEXT("BAMM"));
 	}*/
 	float lrec = 1.f / sqrtf(A * A + B * B);
 	//UE_LOG(LogRVOTest, Warning, TEXT("addcl %f %f %f lrec: %f"), A, B, C, lrec);
@@ -85,8 +154,8 @@ void CPLPSolver::AddConstraintCircle(float U, float V, float R, bool fixed)
 			//when new circle is completely inside the another, the smaller one is enough
 			float rsub = constraints[i * 3 + 2] - R;
 			//float rsubAbs = fabsf(rsub);
-			
-			
+
+
 
 			float circDistSq = (constraints[i * 3] - U) * (constraints[i * 3] - U) + (constraints[i * 3 + 1] - V) * (constraints[i * 3 + 1] - V);
 			//if one circle is completely inside the other
@@ -141,38 +210,12 @@ bool CPLPSolver::HasSolution()
 	return feasible;
 }
 
-//for debugging
-void printArray(std::vector<float>& arr)
-{
-	std::cout << "tomb: ";
-	for (int i = 0; i < arr.size(); i++)
-	{
-
-		std::cout << arr[i];
-		if (i % 3 == 2)
-			std::cout << ", ";
-		else
-			std::cout << " ";
-	}
-	std::cout << "\n";
-}
-
-//for debugging
-void printOrder(std::vector<int>& order)
-{
-	std::cout << "order: ";
-	for (int i = 0; i < order.size(); i++)
-	{
-		std::cout << order[i] << " ";
-	}
-	std::cout << "\n";
-}
 
 bool CPLPSolver::pointSatisfiesConstraint(float tx, float ty, int n, float d)
 {
 	if (filter.count(n) == 0)
 	{
-		if (constraintTypes[n] == CT_LINEAR && constraints[n * 3] * tx + constraints[n * 3 + 1] * ty + EPS > constraints[n * 3 + 2] + d ) // + EPS  to the end?)
+		if (constraintTypes[n] == CT_LINEAR && constraints[n * 3] * tx + constraints[n * 3 + 1] * ty + EPS > constraints[n * 3 + 2] + d) // + EPS  to the end?)
 		{
 			return false;
 		}
@@ -269,7 +312,7 @@ void CPLPSolver::updatePointIfBetter(float x, float y, int n, float& resX, float
 	}
 	if (pointSatisfiesConstraints(x, y, n, 0.f, true))
 	{
-		
+
 		float td = getPointsMaxDistance(x, y);
 		if (td < d)
 		{
@@ -284,10 +327,10 @@ void CPLPSolver::updatePointIfBetter(float x, float y, int n, float& resX, float
 			{
 				UE_LOG(LogRVOTest, Warning, TEXT("BAM in: updatepointifbetter"));
 			}
-			
+
 		}
 
-		
+
 	}
 
 	else if (debug)
@@ -298,12 +341,18 @@ void CPLPSolver::updatePointIfBetter(float x, float y, int n, float& resX, float
 
 void CPLPSolver::Solve(float& resX, float& resY)
 {
-	//printArray(constraints);
+
 
 	usedSafest = false;
 
 	filter.clear();
 	createRandomOrder();
+
+	if (debug)
+	{
+		LogData();
+	}
+
 
 	float tx = 0.f;
 	float ty = 0.f;
@@ -313,31 +362,8 @@ void CPLPSolver::Solve(float& resX, float& resY)
 	resX = u;
 	resY = v;
 
-	//printOrder(order);
 
-	if (debug)
-	{
-		UE_LOG(LogRVOTest, Warning, TEXT("u v : %f %f  "), u, v);
 
-		UE_LOG(LogRVOTest, Warning, TEXT("All constraints: "));
-
-		for (int i = 0; i < constraints.size() / 3; i++)
-		{
-			int id = order[i];
-			int pos = id * 3;
-			if (constraintTypes[id] == CT_LINEAR)
-			{
-				UE_LOG(LogRVOTest, Warning, TEXT("%d lin: %f %f %f "), id, constraints[pos], constraints[pos + 1], constraints[pos + 2]);
-			}
-			else
-			{
-				UE_LOG(LogRVOTest, Warning, TEXT("%d cir: %f %f %f "), id, constraints[pos], constraints[pos + 1], constraints[pos + 2]);
-			}
-			
-		}
-	}
-	
-	
 
 	for (int i = 0; i < constraints.size() / 3; i++)
 	{
@@ -348,8 +374,8 @@ void CPLPSolver::Solve(float& resX, float& resY)
 		int id = order[i];
 		int pos = id * 3;
 
-		
-		
+
+
 
 		bool first = false;
 		if (constraintTypes[id] == CT_LINEAR)
@@ -365,14 +391,14 @@ void CPLPSolver::Solve(float& resX, float& resY)
 				UE_LOG(LogRVOTest, Warning, TEXT("%d. constr : %f %f %f  "), id, constraints[pos], constraints[pos + 1], constraints[pos + 2]);
 			}
 		}
-		
+
 		filter.clear();
 		filter.insert(id);
 
 		feasible = false;
 		float minDistSqr = -1.f;
 		float tdist;
-		
+
 		if (first && pointSatisfiesConstraints(tx, ty, i))
 		{
 			feasible = true;
@@ -385,7 +411,7 @@ void CPLPSolver::Solve(float& resX, float& resY)
 				UE_LOG(LogRVOTest, Warning, TEXT("cplpsolver::solve  %f %f %f %f %f %f %f"), constraints[pos], constraints[pos + 1], constraints[pos + 2], u, v, tx, ty);
 			}
 		}
-		
+
 
 
 		for (int j = 0; j < i; j++)
@@ -414,7 +440,7 @@ void CPLPSolver::Solve(float& resX, float& resY)
 			}
 			else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_CIRCLE)
 			{
-				
+
 				hasIntersection = BMU::IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
 				if (!hasIntersection)
 				{
@@ -438,11 +464,11 @@ void CPLPSolver::Solve(float& resX, float& resY)
 						AddConstraintCircle(U1, V1, R1);
 						AddConstraintCircle(U2, V2, R2);
 					}
-					
+
 					feasible = false;
 					return;
 				}
-				
+
 			}
 			if (hasIntersection)
 			{
@@ -465,7 +491,7 @@ void CPLPSolver::Solve(float& resX, float& resY)
 							{
 								UE_LOG(LogRVOTest, Warning, TEXT("cir: "));
 							}
-								
+
 							UE_LOG(LogRVOTest, Warning, TEXT("%f %f %f "), constraints[pos], constraints[pos + 1], constraints[pos + 2]);
 						}
 					}
@@ -499,6 +525,7 @@ void CPLPSolver::Solve(float& resX, float& resY)
 		if (!feasible)
 		{
 			SolveSafest(i, resX, resY);
+			feasible = true;
 			return;
 		}
 	}
@@ -509,13 +536,11 @@ void CPLPSolver::Solve(float& resX, float& resY)
 
 void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 {
-	TTODOO: set usedDInSafest! ?ASD$
+
 	usedSafest = true;
 
 	filter.clear();
-	
 
-	//normalizeLinearConstraints();
 
 	float tx = 0.f;
 	float ty = 0.f;
@@ -523,9 +548,7 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 	float ty2 = 0.f;
 
 	float d = 0.f;
-	
 
-	//printOrder(order);
 
 	for (int i = failIndex; i < constraints.size() / 3; i++)
 	{
@@ -549,7 +572,7 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 		filter.clear();
 		filter.insert(id);
 
-		
+
 		bool solvable = false;
 		float minDistSqr = -1.f;
 		float tdist;
@@ -594,7 +617,7 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 			}
 			else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_CIRCLE)
 			{
-				
+
 				hasIntersection = BMU::IntersectCircleCircle(constraints[pos], constraints[pos + 1], constraints[pos + 2], constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], tx, ty, tx2, ty2);
 				if (!hasIntersection)
 				{
@@ -679,7 +702,7 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 						updatePointIfBetter(tx, ty, i, resX, resY, d);
 						updatePointIfBetter(tx2, ty2, i, resX, resY, d);
 					}
-					
+
 				}
 
 				//circle centers projected towards the line
@@ -735,14 +758,14 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 
 					else if (constraintTypes[jd] == CT_CIRCLE && constraintTypes[kd] == CT_CIRCLE)
 					{
-						
+
 						bool intersects = BMU::IntersectCircleCircle(constraints[pos2], constraints[pos2 + 1], constraints[pos2 + 2], constraints[pos3], constraints[pos3 + 1], constraints[pos3 + 2], tx, ty, tx2, ty2);
 						if (intersects)
 						{
 							updatePointIfBetter(tx, ty, i, resX, resY, d);
 							updatePointIfBetter(tx2, ty2, i, resX, resY, d);
 						}
-						
+
 					}
 
 					else if (constraintTypes[id] == CT_LINEAR && constraintTypes[jd] == CT_LINEAR && constraintTypes[kd] == CT_CIRCLE)
@@ -797,4 +820,5 @@ void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 		}
 	}
 
+	usedDInSafest = d;
 }
