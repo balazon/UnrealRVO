@@ -309,8 +309,8 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 		ux *= .5f;
 		uy *= .5f;
 	}
-	ux += Nx * 1.f;
-	uy += Ny * 1.f;
+	/*ux += Nx * 1.f;
+	uy += Ny * 1.f;*/
 
 	float A1, B1, C1, A2, B2, C2;
 	A1 = -Nx; B1 = -Ny; C1 = -Nx * (a.vx + ux) - Ny * (a.vy + uy);
@@ -405,6 +405,11 @@ void ORCASolver::ComputeNewVelocities()
 
 		solver.Solve(a.vx_new, a.vy_new);
 
+		if (solver.usedSafest)
+		{
+			for (int i = 0; i < 10.f)
+			SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/test.svg", this, num, i);
+		}
 
 
 		if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2.f * EPS))

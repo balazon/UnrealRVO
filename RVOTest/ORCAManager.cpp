@@ -141,6 +141,7 @@ void AORCAManager::SimulateORCA(float DeltaTime)
 
 void AORCAManager::RegisterAvoidanceComponent(UAvoidanceComponent* ac)
 {
+	ac->pawn->AddTickPrerequisiteActor(this);
 	units.AddUnique(ac);
 	closest.reserve(units.Num());
 	closest.push_back(units.Num() - 1);
@@ -149,6 +150,7 @@ void AORCAManager::RegisterAvoidanceComponent(UAvoidanceComponent* ac)
 
 void AORCAManager::DeRegisterAvoidanceComponent(UAvoidanceComponent* ac)
 {
+	ac->pawn->RemoveTickPrerequisiteActor(this);
 	units.Remove(ac);
 	for (int i = 0; i < closest.size(); i++)
 	{

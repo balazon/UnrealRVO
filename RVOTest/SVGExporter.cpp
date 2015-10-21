@@ -23,7 +23,7 @@ int SVGExporter::writeUnits(std::string fileName, ORCASolver* solver, int num)
 	return exporter.writeUnits(solver, num);
 }
 
-int SVGExporter::writeUnitORCAs(std::string fileName, ORCASolver* solver, int num, int agentID)
+int SVGExporter::writeUnitORCAs(std::string fileName, ORCASolver* solver, int num, int agentID, float d)
 {
 	SVGExporter exporter{ fileName };
 
@@ -33,7 +33,7 @@ int SVGExporter::writeUnitORCAs(std::string fileName, ORCASolver* solver, int nu
 		return -1;
 	}
 
-	return exporter.writeUnitORCAs(solver, num, agentID);
+	return exporter.writeUnitORCAs(solver, num, agentID, d);
 }
 
 int SVGExporter::writeUnits( ORCASolver* solver, int num)
@@ -54,7 +54,7 @@ int SVGExporter::writeUnits( ORCASolver* solver, int num)
 	return 0;
 }
 
-int SVGExporter::writeUnitORCAs(ORCASolver* solver, int num, int agentID)
+int SVGExporter::writeUnitORCAs(ORCASolver* solver, int num, int agentID, float d)
 {
 	Agent& a = solver->GetAgent(agentID);
 	
@@ -78,7 +78,7 @@ int SVGExporter::writeUnitORCAs(ORCASolver* solver, int num, int agentID)
 		float C = a.ORCAC[i];
 		float tx, ty;
 		BMU::OrthogonalProjectionOfPointOnLine(A, B, C, a.vx, a.vy, tx, ty);
-		writeHalfplane(a.x + tx, a.y + ty, A, B);
+		writeHalfplane(a.x + tx + A * d, a.y + ty + B * d, A, B);
 	}
 	writeCircle(a.x + a.vx, a.y + a.vy, a.maxAccMagnitude);
 	writeCircle(a.x, a.y, a.maxVelocityMagnitude);

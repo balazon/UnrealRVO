@@ -300,6 +300,8 @@ void CPLPSolver::Solve(float& resX, float& resY)
 {
 	//printArray(constraints);
 
+	usedSafest = false;
+
 	filter.clear();
 	createRandomOrder();
 
@@ -507,6 +509,9 @@ void CPLPSolver::Solve(float& resX, float& resY)
 
 void CPLPSolver::SolveSafest(int failIndex, float& resX, float& resY)
 {
+	TTODOO: set usedDInSafest! ?ASD$
+	usedSafest = true;
+
 	filter.clear();
 	
 

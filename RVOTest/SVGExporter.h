@@ -12,12 +12,12 @@ class SVGExporter
 public:
 	static int writeUnits(std::string fileName, ORCASolver* solver, int num);
 
-	static int writeUnitORCAs(std::string fileName, ORCASolver* solver, int num, int agentID);
+	static int writeUnitORCAs(std::string fileName, ORCASolver* solver, int num, int agentID, float d = 0.f);
 
 
 	int writeUnits(ORCASolver* solver, int num);
 
-	int writeUnitORCAs(ORCASolver* solver, int num, int agentID);
+	int writeUnitORCAs(ORCASolver* solver, int num, int agentID, float d);
 
 	void writeOutLine(std::string line);
 

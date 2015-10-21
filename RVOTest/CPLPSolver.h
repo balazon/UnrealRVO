@@ -37,6 +37,10 @@ public:
 	void SolveSafest(int failIndex, float& resX, float& resY);
 
 	bool debug;
+
+	bool usedSafest;
+
+	float usedDInSafest;
 private:
 	//destination coordinates
 	float u, v;
