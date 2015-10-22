@@ -135,6 +135,7 @@ void SVGExporter::startSvg(int width, int height)
 void SVGExporter::endSvg()
 {
 	writeOutLine("</svg>");
+	
 
 }
 

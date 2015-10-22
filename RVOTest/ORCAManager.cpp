@@ -6,6 +6,7 @@
 #include "AvoidanceComponent.h"
 #include <algorithm>
 
+#include <chrono>
 //#include "TimerManager.h"
 
 
@@ -23,7 +24,7 @@ bool CloserAgentComparator::operator()(uint16 leftId, uint16 rightId)
 
 
 // Sets default values
-AORCAManager::AORCAManager()
+AORCAManager::AORCAManager() : mylog{ "D:/Bala/Unreal Projects/RVOTest/log.txt" }
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -62,23 +63,38 @@ void AORCAManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-
+	auto start = std::chrono::high_resolution_clock::now();
+	
+		
+	
 	SimulateORCA(DeltaTime);
+	
+	auto elapsed = std::chrono::high_resolution_clock::now() - start;
+	//auto time_span = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start);
+	long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+	//long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+	UE_LOG(LogRVOTest, Warning, TEXT("t %ld"), microseconds);
+
+	
+	mylog << units.Num() << " : " << microseconds << "\n";
+
 }
 
 
 void AORCAManager::SimulateORCA(float DeltaTime)
 {
+
 	solver = FBalaRVOModule::Solver();
 
 	solver->ClearAgents();
 
 	for (UAvoidanceComponent* av : units)
 	{
-		if (!av)
+		if (!av || !av->pawn || av->pawn->IsPendingKill())
 		{
 			continue;
 		}
+		
 		FVector2D pos{ av->pawn->GetActorLocation() };
 
 		FVector2D vel{ av->pawn->GetVelocity() };
@@ -152,6 +168,7 @@ void AORCAManager::DeRegisterAvoidanceComponent(UAvoidanceComponent* ac)
 {
 	ac->pawn->RemoveTickPrerequisiteActor(this);
 	units.Remove(ac);
+	
 	for (int i = 0; i < closest.size(); i++)
 	{
 		if (closest[i] == units.Num())

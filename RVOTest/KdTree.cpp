@@ -44,9 +44,16 @@ int randRange(int min, int max)
 void KdTree::build(std::vector<Point>& points)
 {
 
+
 	pointNodes.clear();
 	pointNodes.reserve(points.size());
 
+	if (points.size() == 0)
+	{
+		return;
+	}
+
+	
 	root = buildRecursive(points, 0, points.size() - 1, 0);
 
 	//printList(pointNodes);

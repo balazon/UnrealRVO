@@ -7,6 +7,8 @@
 #include "ORCASolver.h"
 #include "KdTree.h"
 
+#include "BFLog.h"
+
 #include "ORCAManager.generated.h"
 
 class UAvoidanceComponent;
@@ -73,6 +75,8 @@ protected:
 	std::vector<Point> points;
 	void CalculateNearest();
 	
+
+	BFLog mylog;
 };
 
 
