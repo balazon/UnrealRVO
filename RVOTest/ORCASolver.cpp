@@ -223,14 +223,14 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 	if (Npx * vrelx + Npy * vrely > 0 || Nqx * vrelx + Nqy * vrely > 0)
 	{
 		//no chance for collision in this frame
-		/*if (Npx * vrelx + Npy * vrely > a.maxAccMagnitude + b.maxAccMagnitude || Nqx * vrelx + Nqy * vrely > a.maxAccMagnitude + b.maxAccMagnitude )
+		if (Npx * vrelx + Npy * vrely > a.maxAccMagnitude + b.maxAccMagnitude || Nqx * vrelx + Nqy * vrely > a.maxAccMagnitude + b.maxAccMagnitude )
 		{
 		SetORCAConstraint(a, j, 0.f, 0.f, 0.f);
 
 		SetORCAConstraint(b, i, 0.f, 0.f, 0.f);
 
 		return;
-		}*/
+		}
 		outside = true;
 
 	}
@@ -280,14 +280,14 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 
 
 		//no chance for collision in this frame
-		/*if (outside && (vrelx - Sx) * (vrelx - Sx) + (vrely - Sy) * (vrely - Sy) > (a.maxAccMagnitude + b.maxAccMagnitude) * (a.maxAccMagnitude + b.maxAccMagnitude))
+		if (outside && (vrelx - Sx) * (vrelx - Sx) + (vrely - Sy) * (vrely - Sy) > (a.maxAccMagnitude + b.maxAccMagnitude) * (a.maxAccMagnitude + b.maxAccMagnitude))
 		{
 		SetORCAConstraint(a, j, 0.f, 0.f, 0.f);
 
 		SetORCAConstraint(b, i, 0.f, 0.f, 0.f);
 
 		return;
-		}*/
+		}
 
 		float Nlrec = 1.f / sqrtf(Nx * Nx + Ny * Ny);
 		Nx *= Nlrec;

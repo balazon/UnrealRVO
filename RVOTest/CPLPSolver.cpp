@@ -316,7 +316,7 @@ float CPLPSolver::getPointsMaxDistance(float x, float y, int n)
 void CPLPSolver::findNewRelaxationDistance(float& d, int failIndex, float& resX, float& resY)
 {
 
-	d = 1e9;
+	d = FLT_MAX;
 
 	int i = failIndex;
 	int id = order[i];
@@ -345,7 +345,6 @@ void CPLPSolver::findNewRelaxationDistance(float& d, int failIndex, float& resX,
 
 		//circle centers projected towards the line
 		//(for (u, v, r) circle and a normalized (A, B, C) line this point is: (u,v) - r * (A, B)
-		//TODO investigate possible d value that would make the line touch the circle (is it enough or not)
 		else if (constraintTypes[id] == CT_CIRCLE && constraintTypes[jd] == CT_LINEAR)
 		{
 			tx = constraints[pos] - constraints[pos2] * constraints[pos + 2];
