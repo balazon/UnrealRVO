@@ -35,6 +35,8 @@ public:
 
 	static ORCASolver* Solver();
 
+	
+
 private:
 	//static ORCASolver mysolver;
 

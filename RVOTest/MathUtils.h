@@ -21,6 +21,8 @@ class LogRVOTest;
 
 
 
+
+
 #include <cmath>
 #include <utility>
 
@@ -29,6 +31,13 @@ class LogRVOTest;
 
 //bmu for bala math utils
 namespace BMU
+
+#ifdef UE_BUILD
+
+	
+#define BMU_GET_FILEPATH_AS_C_STRING(x) (TCHAR_TO_ANSI(*(FPaths::ConvertRelativePathToFull(FPaths::GameLogDir()) + "/" + x)))
+
+#endif
 {
 	extern bool debug;
 	//intersection point of two lines : Ax + By = C, Dx + Ey = F

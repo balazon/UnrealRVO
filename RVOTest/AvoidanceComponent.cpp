@@ -7,6 +7,7 @@
 
 #include "ORCAManager.h"
 
+
 //#include "UnrealMathUtility.h"
 
 // Sets default values for this component's properties
@@ -35,6 +36,7 @@ UAvoidanceComponent::UAvoidanceComponent()
 
 	bDetour = false;
 
+	bUseAITargetLocation = true;
 	
 	// ...
 }
@@ -86,6 +88,7 @@ void UAvoidanceComponent::BeginPlay()
 	Super::BeginPlay();
 	
 
+	aiController = Cast<AAIController>(pawn->Controller);
 	
 
 	// ...
@@ -136,7 +139,20 @@ void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity, FVector
 
 FVector2D UAvoidanceComponent::GetPreferredVelocity()
 {
-	FVector2D ToTarget{ CurrentTarget - FVector2D{ pawn->GetActorLocation() } };
+	FVector2D ToTarget;
+	if (bUseAITargetLocation && aiController)
+	{
+		ToTarget = FVector2D{ aiController->GetPathFollowingComponent()->GetCurrentTargetLocation() };
+		//FVector2D actLoc {pawn->GetActorLocation() };
+		//UE_LOG(LogRVOTest, Warning, TEXT("UAv::prefv GetCurrentTargetLocation, %f %f, actloc: %f %f"), CurrentTarget.X, CurrentTarget.Y, actLoc.X, actLoc.Y);
+
+	}
+	else
+	{
+		ToTarget = FVector2D{ CurrentTarget - FVector2D{ pawn->GetActorLocation() } };
+	}
+	
+	
 
 	float sqrDist = ToTarget.SizeSquared();
 
@@ -160,6 +176,12 @@ FVector2D UAvoidanceComponent::GetPreferredVelocity()
 	{
 		UE_LOG(LogRVOTest, VeryVerbose, TEXT("UAvoidanceComp:: GetPreferredV , %f %f"), res.X, res.Y);
 	}
+
+	//pawn->s
+	//pawn->Controller->
+	//ACharacter* c;
+	//c->AIControllerClass->
+	
 
 	return res;
 }

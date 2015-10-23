@@ -6,6 +6,8 @@
 #include "AvoidanceComponent.h"
 #include <algorithm>
 
+#include "MathUtils.h"
+
 #include <chrono>
 //#include "TimerManager.h"
 
@@ -24,8 +26,10 @@ bool CloserAgentComparator::operator()(uint16 leftId, uint16 rightId)
 
 
 // Sets default values
-AORCAManager::AORCAManager() : mylog{ "D:/Bala/Unreal Projects/RVOTest/log.txt" }
+//mylog{ (std::string{ "" } + TCHAR_TO_ANSI(*FPaths::ConvertRelativePathToFull(FPaths::GameLogDir())) + "/log.txt" ).c_str()}
+AORCAManager::AORCAManager() : mylog{ BMU_GET_FILEPATH_AS_C_STRING("log.txt") }
 {
+	
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	FBalaRVOModule::Solver()->ClearAgents();
@@ -33,7 +37,6 @@ AORCAManager::AORCAManager() : mylog{ "D:/Bala/Unreal Projects/RVOTest/log.txt" 
 	comp.solver = FBalaRVOModule::Solver();
 	UpdateInterval = 0.1f;
 	
-	//unitList.
 }
 
 // Called when the game starts or when spawned

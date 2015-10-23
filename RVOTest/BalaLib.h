@@ -4,6 +4,8 @@
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
+#include "BFLog.h"
+
 //#include "ORCASolver.h"
 #include "BalaLib.generated.h"
 
@@ -17,11 +19,20 @@ class RVOTEST_API UBalaLib : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
-	/*static void ComputeORCA();*/
-	
-	/*static ORCASolver& Solver();
+		/*static void ComputeORCA();*/
+
+		/*static ORCASolver& Solver();
+
+	private:
+	static ORCASolver solver;*/
+
+	TODOO HERE -
+
+	static BalaCustomLog(FString string);
 
 private:
-	static ORCASolver solver;*/
+
+	static BFLog mylog;
+
 	
 };

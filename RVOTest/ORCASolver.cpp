@@ -404,6 +404,7 @@ void ORCASolver::ComputeNewVelocities()
 
 		solver.Solve(a.vx_new, a.vy_new);
 
+		
 		/*if (solver.usedSafest)
 		{
 			float d;
@@ -414,7 +415,7 @@ void ORCASolver::ComputeNewVelocities()
 
 				char buffer[5];
 				sprintf(buffer, "%d", j);
-				SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/test" + std::string{ buffer } +".svg", this, num, i, printd);
+				SVGExporter::writeUnitORCAs(BMU_GET_FILEPATH_AS_C_STRING("test")  + std::string{ buffer } +".svg", this, num, i, printd);
 			}
 
 			UE_LOG(LogRVOTest, Warning, TEXT("SVG's done a.vnew %f %f"), a.vx_new, a.vy_new);
@@ -430,7 +431,7 @@ void ORCASolver::ComputeNewVelocities()
 
 				char buffer[5];
 				sprintf(buffer, "%d", j);
-				SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/testa" + std::string{ buffer } +".svg", this, num, i, printd);
+				SVGExporter::writeUnitORCAs(BMU_GET_FILEPATH_AS_C_STRING("testa") + std::string{ buffer } +".svg", this, num, i, printd);
 			}
 
 			
@@ -444,7 +445,7 @@ void ORCASolver::ComputeNewVelocities()
 
 				char buffer[5];
 				sprintf(buffer, "%d", j);
-				SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/testb" + std::string{ buffer } +".svg", this, num, i, printd);
+				SVGExporter::writeUnitORCAs(BMU_GET_FILEPATH_AS_C_STRING("testb") + std::string{ buffer } +".svg", this, num, i, printd);
 			}
 			
 			BMU::debug = true;
@@ -467,7 +468,7 @@ void ORCASolver::ComputeNewVelocities()
 
 				char buffer[5];
 				sprintf(buffer, "%d", j);
-				SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/testd" + std::string{ buffer } +".svg", this, num, i, printd);
+				SVGExporter::writeUnitORCAs(BMU_GET_FILEPATH_AS_C_STRING("testd") + std::string{ buffer } +".svg", this, num, i, printd);
 			}
 			UE_LOG(LogRVOTest, Warning, TEXT("Debug SVG's done"));
 		}*/
@@ -482,7 +483,7 @@ void ORCASolver::ComputeNewVelocities()
 			if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2 * EPS))
 			{
 
-				SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/test.svg", this, num, i);
+				SVGExporter::writeUnitORCAs(BMU_GET_FILEPATH_AS_C_STRING("test.svg"), this, num, i);
 				UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);
 				BMU::debug = true;
 				solver.debug = true;
@@ -505,7 +506,7 @@ void ORCASolver::ComputeNewVelocities()
 
 			if ((a.vx_new - a.vx) * (a.vx_new - a.vx) + (a.vy_new - a.vy) * (a.vy_new - a.vy) > a.maxAccMagnitude * (a.maxAccMagnitude + 2 * EPS))
 			{
-				SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/test.svg", this, num, i);
+				SVGExporter::writeUnitORCAs(BMU_GET_FILEPATH_AS_C_STRING("test.svg"), this, num, i);
 				UE_LOG(LogRVOTest, Warning, TEXT("a.v %f %f, a.vnew %f %f, a.maxacc : %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxAccMagnitude);
 				BMU::debug = true;
 				solver.debug = true;
@@ -518,9 +519,9 @@ void ORCASolver::ComputeNewVelocities()
 
 		if (BMU::isnanf(a.vx_new) || BMU::isnanf(a.vy_new))
 		{
-			//FString dir{ "D:/Bala/Unreal Projects/RVOTest/test.svg" };
+			
 
-			SVGExporter::writeUnitORCAs("D:/Bala/Unreal Projects/RVOTest/test.svg", this, num, i);
+			SVGExporter::writeUnitORCAs(BMU_GET_FILEPATH_AS_C_STRING("test.svg"), this, num, i);
 			UE_LOG(LogRVOTest, Warning, TEXT("BAM\n"));
 			UE_LOG(LogRVOTest, Warning, TEXT("a.v: %f %f, a.vnew : %f %f, a.vmax: %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxVelocityMagnitude);
 			UE_LOG(LogRVOTest, Warning, TEXT("a.v %f %f, a.vnew %f %f, a.maxacc : %f"), a.vx, a.vy, a.vx_new, a.vy_new, a.maxAccMagnitude);

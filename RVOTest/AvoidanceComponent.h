@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
+#include "AIController.h"
 
 #include "AvoidanceComponent.generated.h"
 
@@ -47,6 +48,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
 		float SlowdownSquared;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
+		bool bUseAITargetLocation;
 
 	//UFUNCTION(BlueprintCallable, Category = Avoidance, meta = (DisplayName = "Get Current Avoidance Id"))
 	//void 
@@ -58,7 +61,7 @@ public:
 	FVector2D GetPreferredVelocity();
 
 	APawn* pawn;
-
+	AAIController* aiController;
 protected:
 	bool bDetour;
 	bool bStuck;
