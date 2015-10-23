@@ -75,8 +75,6 @@ protected:
 	std::vector<Point> points;
 	void CalculateNearest();
 	
-
-	BFLog mylog;
 };
 
 

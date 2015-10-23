@@ -3,6 +3,7 @@
 #include "RVOTest.h"
 #include "BalaLib.h"
 
+#include "MathUtils.h"
 
 //
 //
@@ -16,3 +17,10 @@
 //	ORCASolver* solver = FBalaRVOModule::Solver();
 //	solver->ComputeNewVelocities();
 //}
+
+BFLog UBalaLib::mylog = BFLog{ BMU_GET_FILEPATH_AS_C_STRING("log.txt") };
+
+void UBalaLib::LogMessageToFile(FString string)
+{
+	mylog << BMU_FSTRING_TO_C_STRING(string);
+}

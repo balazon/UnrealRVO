@@ -8,6 +8,8 @@
 
 #include "MathUtils.h"
 
+#include "BalaLib.h"
+
 #include <chrono>
 //#include "TimerManager.h"
 
@@ -27,7 +29,8 @@ bool CloserAgentComparator::operator()(uint16 leftId, uint16 rightId)
 
 // Sets default values
 //mylog{ (std::string{ "" } + TCHAR_TO_ANSI(*FPaths::ConvertRelativePathToFull(FPaths::GameLogDir())) + "/log.txt" ).c_str()}
-AORCAManager::AORCAManager() : mylog{ BMU_GET_FILEPATH_AS_C_STRING("log.txt") }
+//mylog{ BMU_GET_FILEPATH_AS_C_STRING("log.txt")
+AORCAManager::AORCAManager()
 {
 	
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -79,7 +82,8 @@ void AORCAManager::Tick(float DeltaTime)
 	UE_LOG(LogRVOTest, Warning, TEXT("t %ld"), microseconds);
 
 	
-	mylog << units.Num() << " : " << microseconds << "\n";
+	UBalaLib::LogMessageToFile(FString::Printf(TEXT("%d : %ld\n"), units.Num(), microseconds));
+	//mylog << units.Num() << " : " << microseconds << "\n";
 
 }
 
