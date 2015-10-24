@@ -182,7 +182,7 @@ void AORCAManager::RegisterAvoidanceComponent(UAvoidanceComponent* ac)
 
 void AORCAManager::DeRegisterAvoidanceComponent(UAvoidanceComponent* ac)
 {
-	UE_LOG(LogRVOTest, Warning, TEXT("orcaman: delete %p"), (void*)ac);
+	//UE_LOG(LogRVOTest, Warning, TEXT("orcaman: delete %p"), (void*)ac);
 
 	/*if (!units.Contains(ac))
 	{

@@ -47,7 +47,7 @@ void UAvoidanceComponent::Activate(bool bReset)
 {
 	Super::Activate();
 	
-	UE_LOG(LogRVOTest, Warning, TEXT("uav: activate %p"), (void*)this); 
+	//UE_LOG(LogRVOTest, Warning, TEXT("uav: activate %p"), (void*)this); 
 
 
 	pawn = Cast<APawn>(GetOwner());
@@ -84,7 +84,7 @@ void UAvoidanceComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 
-	UE_LOG(LogRVOTest, Warning, TEXT("uav endplay "));
+	//UE_LOG(LogRVOTest, Warning, TEXT("uav endplay "));
 
 	manager->DeRegisterAvoidanceComponent(this);
 
@@ -95,7 +95,7 @@ void UAvoidanceComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	UE_LOG(LogRVOTest, Warning, TEXT("uav beginplay "));
+	//UE_LOG(LogRVOTest, Warning, TEXT("uav beginplay "));
 
 
 	aiController = Cast<AAIController>(pawn->Controller);
