@@ -33,6 +33,7 @@ struct Agent
 	float maxVelocityMagnitude;
 	float maxAccMagnitude;
 
+	float sqDistSum;
 
 	Agent();
 	Agent(float x, float y, float vx, float vy, float r, float vx_pref, float vy_pref, float maxVelocityMagnitude, float maxAccMagnitude);
@@ -80,6 +81,8 @@ public:
 	void SetDebugging(bool on);
 
 	friend class Tester;
+
+	bool dynamicRadiusMultiplying;
 private:
 
 	//used for calculating the limited VO (t < T), otherwise known as tau

@@ -24,7 +24,7 @@ UAvoidanceComponent::UAvoidanceComponent()
 
 	MaxAcceleration = 2000.f;
 
-	AcceptanceSquared = 1600.f;
+	AcceptanceSquared = 400.f;
 
 	SlowdownSquared = 10000.f;
 	
@@ -32,19 +32,38 @@ UAvoidanceComponent::UAvoidanceComponent()
 
 	angle = 0.f;
 	
-	bStuck = false;
 
-	bDetour = false;
+	bUseAITargetLocation = false;
 
-	bUseAITargetLocation = true;
+	newVel = FVector2D::ZeroVector;
 	
 	// ...
+}
+
+void UAvoidanceComponent::OnRegister()
+{
+	Super::OnRegister();
+	UE_LOG(LogRVOTest, Warning, TEXT("uav: onregister %p"), (void*)this);
+
+
+}
+
+void UAvoidanceComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+
+	UE_LOG(LogRVOTest, Warning, TEXT("uav: initialize %p"), (void*)this);
+
+
 }
 
 void UAvoidanceComponent::Activate(bool bReset)
 {
 	Super::Activate();
 	
+	UE_LOG(LogRVOTest, Warning, TEXT("uav: activate %p"), (void*)this); 
+
+
 	pawn = Cast<APawn>(GetOwner());
 
 	mc = pawn->GetMovementComponent();
@@ -64,7 +83,7 @@ void UAvoidanceComponent::Activate(bool bReset)
 	}
 	if (!manager)
 	{
-		UE_LOG(LogRVOTest, VeryVerbose, TEXT("You have to place an ORCAManager in the scene for the Aavoidance Component to work"));
+		UE_LOG(LogRVOTest, Warning, TEXT("You have to place an ORCAManager in the scene for the Aavoidance Component to work"));
 	}
 	else
 	{
@@ -78,15 +97,58 @@ void UAvoidanceComponent::Deactivate()
 {
 	Super::Deactivate();
 	//unit is dead etc
-	manager->DeRegisterAvoidanceComponent(this);
+	
+
+	UE_LOG(LogRVOTest, Warning, TEXT("uav deactivated %p"), (void*)this); 
+
+	//manager->DeRegisterAvoidanceComponent(this);
 }
 
+void UAvoidanceComponent::OnComponentDestroyed()
+{
+	Super::OnComponentDestroyed();
+
+	UE_LOG(LogRVOTest, Warning, TEXT("uav compdestroyed %p"), (void*)this); 
+
+	//manager->DeRegisterAvoidanceComponent(this);
+
+}
+
+void UAvoidanceComponent::DestroyComponent(bool bPromoteChildren)
+{
+	Super::DestroyComponent();
+	UE_LOG(LogRVOTest, Warning, TEXT("uav destroycomp %p"), (void*)this);
+
+	//manager->DeRegisterAvoidanceComponent(this);
+
+}
+
+void UAvoidanceComponent::OnUnregister()
+{
+	Super::OnUnregister();
+	UE_LOG(LogRVOTest, Warning, TEXT("uav unregister %p"), (void*)this); 
+
+	//manager->DeRegisterAvoidanceComponent(this);
+}
+
+void UAvoidanceComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	UE_LOG(LogRVOTest, Warning, TEXT("uav endplay "));
+
+	manager->DeRegisterAvoidanceComponent(this);
+
+}
 
 // Called when the game starts
 void UAvoidanceComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	UE_LOG(LogRVOTest, Warning, TEXT("uav beginplay "));
+
+
 
 	aiController = Cast<AAIController>(pawn->Controller);
 	
@@ -99,8 +161,19 @@ void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity, FVector
 	UE_LOG(LogRVOTest, VeryVerbose, TEXT("uav component:: set new vel, old:  %f %f, new : %f %f %f"), mc->Velocity.X, mc->Velocity.Y, mc->Velocity.Z, newVelocity.X, newVelocity.Y);
 
 	//mc->Velocity = FVector{ newVelocity, 0.f };
+
 	newVel = newVelocity;
+
+	/*if (newVel.SizeSquared() > 1.f)
+	{
+		float angle = atan2f(newVel.Y, newVel.X);
+		pawn->SetActorRotation(FRotator{ 0.f, angle * 6.283f, 0.f });
+	}*/
+	
+	//UCharacterMovementComponent* ucharmc;
 	mc->RequestDirectMove(FVector{ newVelocity, 0.f }, false);
+
+	
 	
 	//PostProcessAvoidanceVelocity
 	//UCharacterMovementComponent* asd;
@@ -145,6 +218,7 @@ FVector2D UAvoidanceComponent::GetPreferredVelocity()
 		ToTarget = FVector2D{ aiController->GetPathFollowingComponent()->GetCurrentTargetLocation() };
 		//FVector2D actLoc {pawn->GetActorLocation() };
 		//UE_LOG(LogRVOTest, Warning, TEXT("UAv::prefv GetCurrentTargetLocation, %f %f, actloc: %f %f"), CurrentTarget.X, CurrentTarget.Y, actLoc.X, actLoc.Y);
+		//UE_LOG(LogRVOTest, Warning, TEXT("UAv::Totarget: %f %f"), ToTarget.X, ToTarget.Y);
 
 	}
 	else
@@ -192,45 +266,27 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 	
+	/*if (newVel.SizeSquared() > 1.f)
+	{
+		float angle = atan2f(newVel.Y, newVel.X);
+		pawn->SetActorRotation(FRotator{ 0.f, angle * 6.283f, 0.f });
+	}*/
+
+	/*if (IsBeingDestroyed() || IsPendingKill())
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("uav tick kill"));
+
+		manager->DeRegisterAvoidanceComponent(this);
+		return;
+	}*/
 
 	mc->RequestDirectMove(FVector{ newVel, 0.f }, false);
+	
+	
 
-	return;
+	
 
-	if (bDetour)
-	{
-		stuckTimer -= DeltaTime;
-		if (stuckTimer < 0.f)
-		{
-			FVector2D temp = CurrentTarget;
-			CurrentTarget = TempTarget;
-			TempTarget = CurrentTarget;
-			bStuck = false;
-			stuckTimer = 3.f;
-			bDetour = false;
-		}
-	}
-
-	if (bStuck)
-	{
-		stuckTimer -= DeltaTime;
-		if (stuckTimer < 0.f)
-		{
-			//FVector::Unit
-			
-			FMath::VRandCone(-pawn->GetActorForwardVector(), 1.2f);
-			
-			float translate = FMath::FRandRange(0.8f, 1.2f) * 100.f;
-			TempTarget = FVector2D{ pawn->GetActorLocation() } +FVector2D{ FMath::VRandCone(-pawn->GetActorForwardVector(), 1.2f) } *translate;
-			
-			FVector2D temp = CurrentTarget;
-			CurrentTarget = TempTarget;
-			TempTarget = CurrentTarget;
-			bStuck = false;
-			stuckTimer = 3.f;
-			bDetour = true;
-		}
-	}
+	
 
 	
 	//pawn->AddMovementInput(inputDir, inputL);

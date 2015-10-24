@@ -111,6 +111,15 @@ void KdTree::updateNeighbours(ORCASolver* solver)
 		
 		Agent& a = solver->GetAgent(pn->p->pointId);
 		findNearby(pn->p, root, a.nearbyAgents, currentBestDistancesSq, a.nearbyCount, 0);
+
+		float sqDistSum = 0.f;
+		for (int i = 0; i < a.nearbyCount; i++)
+		{
+			sqDistSum += currentBestDistancesSq[i];
+		}
+		sqDistSum += (KD_MAXNEARBY - a.nearbyCount) * 4.f * a.r * a.r;
+		a.sqDistSum = sqDistSum;
+			
 	}
 }
 

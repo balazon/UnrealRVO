@@ -29,7 +29,7 @@ void printArray(std::vector<float>& arr)
 }
 
 //for debugging
-void printOrder(std::vector<int>& order)
+void printOrder(const std::vector<int>& order)
 {
 	std::cout << "order: ";
 	for (int i = 0; i < order.size(); i++)
@@ -62,7 +62,7 @@ void CPLPSolver::Reset()
 	useCustomOrder = false;
 }
 
-void CPLPSolver::LogData()
+void CPLPSolver::LogData() const
 {
 	UE_LOG(LogRVOTest, Warning, TEXT("\n\nCPLP Data:\n\n"));
 
@@ -206,13 +206,13 @@ void CPLPSolver::SetDestination(float u, float v)
 	this->v = v;
 }
 
-bool CPLPSolver::HasSolution()
+bool CPLPSolver::HasSolution() const
 {
 	return feasible;
 }
 
 
-bool CPLPSolver::pointSatisfiesConstraint(float tx, float ty, int n, float d)
+bool CPLPSolver::pointSatisfiesConstraint(float tx, float ty, int n, float d) const
 {
 	if (filter.count(n) == 0)
 	{
@@ -230,7 +230,7 @@ bool CPLPSolver::pointSatisfiesConstraint(float tx, float ty, int n, float d)
 	return true;
 }
 
-bool CPLPSolver::pointSatisfiesConstraints(float tx, float ty, int n, float d, bool onlyCircles)
+bool CPLPSolver::pointSatisfiesConstraints(float tx, float ty, int n, float d, bool onlyCircles) const
 {
 	if (debug)
 	{
@@ -293,7 +293,7 @@ void CPLPSolver::normalizeLinearConstraints()
 	}
 }
 
-float CPLPSolver::getPointsMaxDistance(float x, float y, int n)
+float CPLPSolver::getPointsMaxDistance(float x, float y, int n) const
 {
 	float dmax = 0.f;
 	for (int i = 0; i <= n; i++)
@@ -502,6 +502,7 @@ void CPLPSolver::Solve(float& resX, float& resY)
 
 
 	usedSafest = false;
+	usedDInSafest = 0.f;
 
 	filter.clear();
 	if (!useCustomOrder)
@@ -610,7 +611,7 @@ void CPLPSolver::Solve(float& resX, float& resY)
 
 					UE_LOG(LogRVOTest, Warning, TEXT("cir cir: %f %f %f %f %f %f"), U1, V1, R1, U2, V2, R2);
 
-					BMU::debug = true;
+					/*BMU::debug = true;
 					BMU::IntersectCircleCircle(U1, V1, R1, U2, V2, R2, tx, ty, tx2, ty2);
 					BMU::debug = false;
 
@@ -624,7 +625,7 @@ void CPLPSolver::Solve(float& resX, float& resY)
 					{
 						AddConstraintCircle(U1, V1, R1);
 						AddConstraintCircle(U2, V2, R2);
-					}
+					}*/
 
 					feasible = false;
 					return;
@@ -685,8 +686,9 @@ void CPLPSolver::Solve(float& resX, float& resY)
 		}
 		if (!feasible)
 		{
-			SolveSafest(i, resX, resY);
 			feasible = true;
+			SolveSafest(i, resX, resY);
+			
 			return;
 		}
 	}

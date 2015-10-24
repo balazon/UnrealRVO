@@ -31,7 +31,7 @@ public:
 	//Destination coordinates
 	void SetDestination(float u, float v);
 
-	bool HasSolution();
+	bool HasSolution() const;
 	void Solve(float& resX, float& resY);
 
 	void SolveSafest(int failIndex, float& resX, float& resY);
@@ -42,7 +42,7 @@ public:
 
 	float usedDInSafest;
 
-	void LogData();
+	void LogData() const;
 
 	//for debug purposes
 	void SetOrder(std::vector<int> order);
@@ -67,17 +67,17 @@ private:
 	std::unordered_set<int> filter;
 
 	//nth constraint in array (not in the random order)
-	bool pointSatisfiesConstraint(float tx, float ty, int n, float d = 0.f);
+	bool pointSatisfiesConstraint(float tx, float ty, int n, float d = 0.f) const;
 
 	//with regard to random order, from 0 up to and including n (first n+1)
-	bool pointSatisfiesConstraints(float tx, float ty, int n, float d = 0.f, bool onlyCircles = false);
+	bool pointSatisfiesConstraints(float tx, float ty, int n, float d = 0.f, bool onlyCircles = false) const;
 
 	void createRandomOrder();
 
 	void normalizeLinearConstraints();
 
 	//the max d value for checked linear constraints (up to and including index n)
-	float getPointsMaxDistance(float x, float y, int n);
+	float getPointsMaxDistance(float x, float y, int n) const;
 
 	
 	//calculate new d

@@ -40,6 +40,7 @@ AORCAManager::AORCAManager()
 	comp.solver = FBalaRVOModule::Solver();
 	UpdateInterval = 0.1f;
 	
+	bDynamicRadiusMultiplying = false;
 }
 
 // Called when the game starts or when spawned
@@ -47,6 +48,9 @@ void AORCAManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	solver = FBalaRVOModule::Solver();
+
+	solver->dynamicRadiusMultiplying = bDynamicRadiusMultiplying;
 	//GetWorld()->gamemode
 	//FTimerDelegate::CreateUObject
 	//GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AORCAManager::UpdatingDelegate), UpdateInterval, true);
@@ -79,7 +83,7 @@ void AORCAManager::Tick(float DeltaTime)
 	//auto time_span = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start);
 	long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 	//long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-	UE_LOG(LogRVOTest, Warning, TEXT("t %ld"), microseconds);
+	//UE_LOG(LogRVOTest, Warning, TEXT("t %ld"), microseconds);
 
 	
 	UBalaLib::LogMessageToFile(FString::Printf(TEXT("%d : %ld\n"), units.Num(), microseconds));
@@ -90,14 +94,13 @@ void AORCAManager::Tick(float DeltaTime)
 
 void AORCAManager::SimulateORCA(float DeltaTime)
 {
-
-	solver = FBalaRVOModule::Solver();
-
+	
 	solver->ClearAgents();
 
 	for (UAvoidanceComponent* av : units)
 	{
-		if (!av || !av->pawn || av->pawn->IsPendingKill())
+		
+		if (!av || av->IsPendingKill() || av->IsBeingDestroyed() || !av->pawn || av->pawn->IsPendingKill() || av->pawn->IsActorBeingDestroyed())
 		{
 			continue;
 		}
@@ -105,8 +108,12 @@ void AORCAManager::SimulateORCA(float DeltaTime)
 		FVector2D pos{ av->pawn->GetActorLocation() };
 
 		FVector2D vel{ av->pawn->GetVelocity() };
-
-
+		/*if (vel.SizeSquared() > av->MaxVelocity * av->MaxVelocity)
+		{
+			vel.Normalize();
+			vel *= av->MaxVelocity;
+		}*/
+		
 		FVector2D PreferredVelocity = av->GetPreferredVelocity();
 
 		if (PreferredVelocity.ContainsNaN())
@@ -132,7 +139,7 @@ void AORCAManager::SimulateORCA(float DeltaTime)
 	int id = -1;
 	for (UAvoidanceComponent* av : units)
 	{
-		if (!av)
+		if (!av || av->IsPendingKill())
 		{
 			continue;
 		}
@@ -144,6 +151,7 @@ void AORCAManager::SimulateORCA(float DeltaTime)
 		FVector inputDir;
 		float inputLength;
 		input.ToDirectionAndLength(inputDir, inputLength);
+
 		av->SetNewAvoidanceVelocity(FVector2D{ agent.vx_new, agent.vy_new }, FVector2D{ inputDir }, inputLength / agent.maxAccMagnitude);
 
 		UE_LOG(LogRVOTest, VeryVerbose, TEXT("orcaman:: new vel: %f %f"), agent.vx_new, agent.vy_new);
@@ -166,24 +174,36 @@ void AORCAManager::RegisterAvoidanceComponent(UAvoidanceComponent* ac)
 {
 	ac->pawn->AddTickPrerequisiteActor(this);
 	units.AddUnique(ac);
-	closest.reserve(units.Num());
-	closest.push_back(units.Num() - 1);
+
+	/*closest.reserve(units.Num());
+	closest.push_back(units.Num() - 1);*/
 	
 }
 
 void AORCAManager::DeRegisterAvoidanceComponent(UAvoidanceComponent* ac)
 {
+	UE_LOG(LogRVOTest, Warning, TEXT("orcaman: delete %p"), (void*)ac);
+
+	/*if (!units.Contains(ac))
+	{
+		return;
+	}*/
+
 	ac->pawn->RemoveTickPrerequisiteActor(this);
 	units.Remove(ac);
+
 	
-	for (int i = 0; i < closest.size(); i++)
+
+	
+	
+	/*for (int i = 0; i < closest.size(); i++)
 	{
 		if (closest[i] == units.Num())
 		{
 			closest.erase(closest.begin() + i);
 			break;
 		}
-	}
+	}*/
 }
 
 

@@ -26,7 +26,7 @@ Agent::Agent() : Agent{ 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f }
 }
 
 Agent::Agent(float x, float y, float vx, float vy, float r, float vx_pref, float vy_pref, float maxVelocityMagnitude, float maxAccMagnitude)
-	: x{ x }, y{ y }, vx{ vx }, vy{ vy }, r{ r }, vx_pref{ vx_pref }, vy_pref{ vy_pref }, maxVelocityMagnitude{ maxVelocityMagnitude }, maxAccMagnitude{ maxAccMagnitude }, nearbyCount{ 0 }
+	: x{ x }, y{ y }, vx{ vx }, vy{ vy }, r{ r }, vx_pref{ vx_pref }, vy_pref{ vy_pref }, maxVelocityMagnitude{ maxVelocityMagnitude }, maxAccMagnitude{ maxAccMagnitude }, nearbyCount{ 0 }, sqDistSum{0.f}
 {
 
 }
@@ -84,7 +84,7 @@ void ORCASolver::SetORCAConstraint(Agent& a, int j, float A, float B, float C)
 	}
 }
 
-ORCASolver::ORCASolver() : T{ CA_TAU }, num{ 0 }
+ORCASolver::ORCASolver() : T{ CA_TAU }, num{ 0 }, dynamicRadiusMultiplying{false}
 {
 }
 
@@ -141,7 +141,16 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 	Agent& b = agents[j];
 	float ABx = b.x - a.x;
 	float ABy = b.y - a.y;
-	float R = a.r + b.r;
+	float aradmul = 8.f * CA_MAXNEARBY * a.r * a.r / a.sqDistSum + 1.f;
+	float bradmul = 8.f * CA_MAXNEARBY * b.r * b.r / b.sqDistSum + 1.f;
+
+	/*if (FMath::FRand() < 0.005f)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("radmul: %f %f"), aradmul, bradmul);
+	}*/
+	
+
+	float R = dynamicRadiusMultiplying ? a.r * aradmul + b.r * bradmul : a.r + b.r;
 	float r = R / T;
 	float Ox = ABx / T;
 	float Oy = ABy / T;
@@ -404,8 +413,18 @@ void ORCASolver::ComputeNewVelocities()
 
 		solver.Solve(a.vx_new, a.vy_new);
 
+		/*if (!solver.HasSolution())
+		{
+			UE_LOG(LogRVOTest, Warning, TEXT("no solution hmm v: %f %f"), a.vx, a.vy);
+
+			a.vx_new = a.vx;
+			a.vy_new = a.vy;
+			continue;
+		}*/
 		
-		/*if (solver.usedSafest)
+		
+
+		if (solver.debug)
 		{
 			float d;
 			d = solver.usedDInSafest;
@@ -471,7 +490,7 @@ void ORCASolver::ComputeNewVelocities()
 				SVGExporter::writeUnitORCAs(BMU_GET_FILEPATH_AS_C_STRING("testd") + std::string{ buffer } +".svg", this, num, i, printd);
 			}
 			UE_LOG(LogRVOTest, Warning, TEXT("Debug SVG's done"));
-		}*/
+		}
 
 
 		if (a.vx_new * a.vx_new + a.vy_new * a.vy_new > a.maxVelocityMagnitude * (a.maxVelocityMagnitude + 2.f * EPS))

@@ -26,7 +26,7 @@ class RVOTEST_API UBalaLib : public UBlueprintFunctionLibrary
 	private:
 	static ORCASolver solver;*/
 
-	//TODOO HERE -
+	
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "Bala Library")

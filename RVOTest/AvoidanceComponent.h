@@ -24,9 +24,22 @@ public:
 	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
+	virtual void InitializeComponent() override;
+
 	virtual void Activate(bool bReset = false) override;
 
+	virtual void OnRegister() override;
+
 	virtual void Deactivate() override;
+
+	virtual void OnComponentDestroyed() override;
+
+	virtual void DestroyComponent(bool bPromoteChildren = false) override;
+
+	virtual void OnUnregister() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
@@ -63,10 +76,7 @@ public:
 	APawn* pawn;
 	AAIController* aiController;
 protected:
-	bool bDetour;
-	bool bStuck;
-	float stuckTimer;
-	FVector2D TempTarget;
+	
 	
 	UPawnMovementComponent* mc;
 

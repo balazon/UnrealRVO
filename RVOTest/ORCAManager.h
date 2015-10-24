@@ -55,6 +55,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance, meta = (DisplayName = "Update Interval in seconds"))
 	float UpdateInterval;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance, meta = (DisplayName = "Should Multiply Radius Dynamically (more radius in dense cases)"))
+	bool bDynamicRadiusMultiplying;
+
 protected:
 	FTimerHandle TimerHandle;
 	void UpdatingDelegate();
