@@ -35,7 +35,7 @@ namespace BMU
 #ifdef UE_BUILD
 
 	
-#define BMU_GET_FILEPATH_AS_C_STRING(x) (TCHAR_TO_ANSI(*(FPaths::ConvertRelativePathToFull(FPaths::GameLogDir()) + "/" + x)))
+#define BMU_GET_FILEPATH_AS_C_STRING(x) (TCHAR_TO_ANSI(*(FPaths::ConvertRelativePathToFull(FPaths::RootDir()) + "/" + x)))
 #define BMU_FSTRING_TO_C_STRING(x) (TCHAR_TO_ANSI(*x))
 #endif
 {

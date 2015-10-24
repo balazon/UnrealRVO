@@ -5,7 +5,7 @@
 
 //#define RVOTEST_API 
 
-#define CA_MAXAGENTS (400)
+#define CA_MAXAGENTS (1000)
 
 #define CA_MAXNEARBY (6)
 
