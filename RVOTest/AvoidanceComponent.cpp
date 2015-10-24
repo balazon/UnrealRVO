@@ -37,25 +37,11 @@ UAvoidanceComponent::UAvoidanceComponent()
 
 	newVel = FVector2D::ZeroVector;
 	
-	// ...
 }
 
-void UAvoidanceComponent::OnRegister()
-{
-	Super::OnRegister();
-	UE_LOG(LogRVOTest, Warning, TEXT("uav: onregister %p"), (void*)this);
 
 
-}
 
-void UAvoidanceComponent::InitializeComponent()
-{
-	Super::InitializeComponent();
-
-	UE_LOG(LogRVOTest, Warning, TEXT("uav: initialize %p"), (void*)this);
-
-
-}
 
 void UAvoidanceComponent::Activate(bool bReset)
 {
@@ -93,43 +79,6 @@ void UAvoidanceComponent::Activate(bool bReset)
 	
 }
 
-void UAvoidanceComponent::Deactivate()
-{
-	Super::Deactivate();
-	//unit is dead etc
-	
-
-	UE_LOG(LogRVOTest, Warning, TEXT("uav deactivated %p"), (void*)this); 
-
-	//manager->DeRegisterAvoidanceComponent(this);
-}
-
-void UAvoidanceComponent::OnComponentDestroyed()
-{
-	Super::OnComponentDestroyed();
-
-	UE_LOG(LogRVOTest, Warning, TEXT("uav compdestroyed %p"), (void*)this); 
-
-	//manager->DeRegisterAvoidanceComponent(this);
-
-}
-
-void UAvoidanceComponent::DestroyComponent(bool bPromoteChildren)
-{
-	Super::DestroyComponent();
-	UE_LOG(LogRVOTest, Warning, TEXT("uav destroycomp %p"), (void*)this);
-
-	//manager->DeRegisterAvoidanceComponent(this);
-
-}
-
-void UAvoidanceComponent::OnUnregister()
-{
-	Super::OnUnregister();
-	UE_LOG(LogRVOTest, Warning, TEXT("uav unregister %p"), (void*)this); 
-
-	//manager->DeRegisterAvoidanceComponent(this);
-}
 
 void UAvoidanceComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
@@ -149,62 +98,18 @@ void UAvoidanceComponent::BeginPlay()
 	UE_LOG(LogRVOTest, Warning, TEXT("uav beginplay "));
 
 
-
 	aiController = Cast<AAIController>(pawn->Controller);
 	
-
-	// ...
 }
 
 void UAvoidanceComponent::SetNewAvoidanceVelocity(FVector2D newVelocity, FVector2D inputDir, float inputScale)
 {
 	UE_LOG(LogRVOTest, VeryVerbose, TEXT("uav component:: set new vel, old:  %f %f, new : %f %f %f"), mc->Velocity.X, mc->Velocity.Y, mc->Velocity.Z, newVelocity.X, newVelocity.Y);
 
-	//mc->Velocity = FVector{ newVelocity, 0.f };
-
-	newVel = newVelocity;
-
-	/*if (newVel.SizeSquared() > 1.f)
-	{
-		float angle = atan2f(newVel.Y, newVel.X);
-		pawn->SetActorRotation(FRotator{ 0.f, angle * 6.283f, 0.f });
-	}*/
-	
+	newVel = newVelocity;	
 	//UCharacterMovementComponent* ucharmc;
+	
 	mc->RequestDirectMove(FVector{ newVelocity, 0.f }, false);
-
-	
-	
-	//PostProcessAvoidanceVelocity
-	//UCharacterMovementComponent* asd;
-	
-	
-	//UFloatingPawnMovement* floating;
-
-	
-	
-	//mc->UpdateComponentVelocity();
-	
-	
-	//FVector2D Vpref = GetPreferredVelocity();
-
-	/*
-	if (!bDetour && Vpref.SizeSquared() > MaxVelocity  * MaxVelocity / 4.f && newVelocity.SizeSquared() < 1.f)
-	{
-		bStuck = true;
-	}
-	else
-	{
-		bStuck = false;
-		stuckTimer = 3.f;
-	}*/
-
-	
-	
-	//UE_LOG(LogRVOTest, Warning, TEXT("newVel, inputdir, inputScale: (%f %f), (%f %f), %f"), newVelocity.X, newVelocity.Y, inputDir.X, inputDir.Y, inputScale);
-	//if (inputScale > 0.1)
-	//pawn->AddMovementInput(FVector{ inputDir , 0.f}, inputScale);
-
 	
 	
 	
@@ -250,11 +155,6 @@ FVector2D UAvoidanceComponent::GetPreferredVelocity()
 	{
 		UE_LOG(LogRVOTest, VeryVerbose, TEXT("UAvoidanceComp:: GetPreferredV , %f %f"), res.X, res.Y);
 	}
-
-	//pawn->s
-	//pawn->Controller->
-	//ACharacter* c;
-	//c->AIControllerClass->
 	
 
 	return res;
@@ -266,32 +166,7 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 	
-	/*if (newVel.SizeSquared() > 1.f)
-	{
-		float angle = atan2f(newVel.Y, newVel.X);
-		pawn->SetActorRotation(FRotator{ 0.f, angle * 6.283f, 0.f });
-	}*/
-
-	/*if (IsBeingDestroyed() || IsPendingKill())
-	{
-		UE_LOG(LogRVOTest, Warning, TEXT("uav tick kill"));
-
-		manager->DeRegisterAvoidanceComponent(this);
-		return;
-	}*/
-
-	mc->RequestDirectMove(FVector{ newVel, 0.f }, false);
-	
-	
-
-	
-
-	
-
-	
-	//pawn->AddMovementInput(inputDir, inputL);
-	//mc->AddInputVector
-	
+	mc->RequestDirectMove(FVector{ newVel, 0.f }, false);	
 
 	//float angle = atan2f(newVel.Y, newVel.X);
 	//pawn->SetActorRotation(FRotator{ 0.f, angle * 6.283f, 0.f });

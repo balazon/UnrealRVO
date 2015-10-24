@@ -413,14 +413,14 @@ void ORCASolver::ComputeNewVelocities()
 
 		solver.Solve(a.vx_new, a.vy_new);
 
-		/*if (!solver.HasSolution())
+		if (!solver.HasSolution())
 		{
 			UE_LOG(LogRVOTest, Warning, TEXT("no solution hmm v: %f %f"), a.vx, a.vy);
 
 			a.vx_new = a.vx;
 			a.vy_new = a.vy;
 			continue;
-		}*/
+		}
 		
 		
 

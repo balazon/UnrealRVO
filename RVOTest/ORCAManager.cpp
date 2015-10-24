@@ -108,11 +108,11 @@ void AORCAManager::SimulateORCA(float DeltaTime)
 		FVector2D pos{ av->pawn->GetActorLocation() };
 
 		FVector2D vel{ av->pawn->GetVelocity() };
-		/*if (vel.SizeSquared() > av->MaxVelocity * av->MaxVelocity)
+		if (vel.SizeSquared() > av->MaxVelocity * av->MaxVelocity)
 		{
 			vel.Normalize();
 			vel *= av->MaxVelocity;
-		}*/
+		}
 		
 		FVector2D PreferredVelocity = av->GetPreferredVelocity();
 
