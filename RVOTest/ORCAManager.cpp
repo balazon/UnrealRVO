@@ -41,6 +41,8 @@ AORCAManager::AORCAManager()
 	UpdateInterval = 0.1f;
 	
 	bDynamicRadiusMultiplying = false;
+
+	dynamicBoost = 1.f;
 }
 
 // Called when the game starts or when spawned
@@ -51,6 +53,9 @@ void AORCAManager::BeginPlay()
 	solver = FBalaRVOModule::Solver();
 
 	solver->dynamicRadiusMultiplying = bDynamicRadiusMultiplying;
+
+	solver->dynamicBoost = dynamicBoost;
+
 	//GetWorld()->gamemode
 	//FTimerDelegate::CreateUObject
 	//GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AORCAManager::UpdatingDelegate), UpdateInterval, true);
@@ -87,6 +92,9 @@ void AORCAManager::Tick(float DeltaTime)
 
 	
 	UBalaLib::LogMessageToFile(FString::Printf(TEXT("%d : %ld\n"), units.Num(), microseconds));
+	
+	UBalaLib::LogMessageToOtherFile(FString::Printf(TEXT("delta: %f\n"), DeltaTime));
+
 	//mylog << units.Num() << " : " << microseconds << "\n";
 
 }

@@ -32,9 +32,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bala Library")
 	static void LogMessageToFile(FString string);
 
+	
+	UFUNCTION(BlueprintCallable, Category = "Bala Library")
+	static void LogMessageToOtherFile(FString string);
+
+	
+
 private:
 
 	static BFLog mylog;
 
-	
+	static BFLog mylog2;
 };

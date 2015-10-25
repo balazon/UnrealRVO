@@ -83,6 +83,8 @@ public:
 	friend class Tester;
 
 	bool dynamicRadiusMultiplying;
+
+	float dynamicBoost;
 private:
 
 	//used for calculating the limited VO (t < T), otherwise known as tau

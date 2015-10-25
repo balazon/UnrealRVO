@@ -55,8 +55,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance, meta = (DisplayName = "Update Interval in seconds"))
 	float UpdateInterval;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance, meta = (DisplayName = "Should Multiply Radius Dynamically (more radius in dense cases)"))
+	//(more radius in dense cases)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance, meta = (DisplayName = "Enable dynamic radius multiplying"))
 	bool bDynamicRadiusMultiplying;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance, meta = (DisplayName = "Dynamic multiplier boost"))
+		float dynamicBoost;
 
 protected:
 	FTimerHandle TimerHandle;

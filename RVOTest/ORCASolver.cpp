@@ -84,7 +84,7 @@ void ORCASolver::SetORCAConstraint(Agent& a, int j, float A, float B, float C)
 	}
 }
 
-ORCASolver::ORCASolver() : T{ CA_TAU }, num{ 0 }, dynamicRadiusMultiplying{false}
+ORCASolver::ORCASolver() : T{ CA_TAU }, num{ 0 }, dynamicRadiusMultiplying{ false }, dynamicBoost{1.f}
 {
 }
 
@@ -141,8 +141,8 @@ void ORCASolver::computeORCAConstraints(int i, int j)
 	Agent& b = agents[j];
 	float ABx = b.x - a.x;
 	float ABy = b.y - a.y;
-	float aradmul = 8.f * CA_MAXNEARBY * a.r * a.r / a.sqDistSum + 1.f;
-	float bradmul = 8.f * CA_MAXNEARBY * b.r * b.r / b.sqDistSum + 1.f;
+	float aradmul = dynamicBoost * 8.f * CA_MAXNEARBY * a.r * a.r / a.sqDistSum + 1.f;
+	float bradmul = dynamicBoost * 8.f * CA_MAXNEARBY * b.r * b.r / b.sqDistSum + 1.f;
 
 	/*if (FMath::FRand() < 0.005f)
 	{
