@@ -4,6 +4,9 @@
 
 #include "Components/ActorComponent.h"
 #include "AIController.h"
+#include "AI/Navigation/NavigationSystem.h"
+#include "AI/Navigation/NavigationPath.h"
+
 
 #include "AvoidanceComponent.generated.h"
 
@@ -64,13 +67,33 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
 		bool bUseAITargetLocation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
+		FVector GlobalTarget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
+	bool bUsePathFinding;
+
 	void SetNewAvoidanceVelocity(FVector2D newVelocity, FVector2D inputDir, float inputScale);
 
 	FVector2D GetPreferredVelocity();
 
 	APawn* pawn;
 	AAIController* aiController;
+
+	UFUNCTION(BlueprintCallable, Category = "Bala Library")
+	void MoveToGlobalTarget();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Avoidance)
+		UNavigationPath* navpath;
 protected:
+
+
+	bool pathFollowSlowdown;
+
+	uint8 pathIndex;
+	TArray<FVector> path;
+
+	void SetGlobalTarget(FVector target);
 
 	UPawnMovementComponent* mc;
 

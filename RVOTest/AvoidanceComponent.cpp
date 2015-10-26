@@ -32,10 +32,14 @@ UAvoidanceComponent::UAvoidanceComponent()
 
 	angle = 0.f;
 	
-
 	bUseAITargetLocation = false;
 
 	newVel = FVector2D::ZeroVector;
+	
+	pathFollowSlowdown = true;
+
+	bUsePathFinding = false;
+
 	
 }
 
@@ -96,9 +100,14 @@ void UAvoidanceComponent::BeginPlay()
 	Super::BeginPlay();
 	
 	//UE_LOG(LogRVOTest, Warning, TEXT("uav beginplay "));
-
+	
 
 	aiController = Cast<AAIController>(pawn->Controller);
+
+	if (bUsePathFinding)
+	{
+		MoveToGlobalTarget();
+	}
 	
 }
 
@@ -143,7 +152,7 @@ FVector2D UAvoidanceComponent::GetPreferredVelocity()
 
 	float b = -m * AcceptanceSquared;
 
-	float k = sqrDist < SlowdownSquared ? sqrDist * m + b : 1.f;
+	float k = (sqrDist < SlowdownSquared && pathFollowSlowdown) ? sqrDist * m + b : 1.f;
 	if (k < SMALL_NUMBER)
 	{
 		return FVector2D::ZeroVector;
@@ -168,9 +177,93 @@ void UAvoidanceComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 	
 	mc->RequestDirectMove(FVector{ newVel, 0.f }, false);	
 
+	if (FMath::FRand() < 0.002f)
+	{
+		FVector2D ToTarget = FVector2D{ CurrentTarget - FVector2D{ pawn->GetActorLocation() } }.GetSafeNormal();
+		UE_LOG(LogRVOTest, Warning, TEXT("ToTarget Dir: %.2f %.2f"), ToTarget.X, ToTarget.Y);
+	}
+	
+
+
+
+	if (bUsePathFinding && pathIndex < path.Num() - 1)
+	{
+		if (FVector2D::DistSquared(CurrentTarget, FVector2D{ pawn->GetActorLocation() }) < AcceptanceSquared)
+		{
+			UE_LOG(LogRVOTest, Warning, TEXT("tick, next target"));
+
+			pathIndex++;
+			CurrentTarget = FVector2D{ path[pathIndex] };
+			pathFollowSlowdown = (pathIndex == path.Num() - 1);
+		}
+	}
+	
 	//float angle = atan2f(newVel.Y, newVel.X);
 	//pawn->SetActorRotation(FRotator{ 0.f, angle * 6.283f, 0.f });
 	// ...
 }
 
+void UAvoidanceComponent::SetGlobalTarget(FVector target)
+{
+	navpath = UNavigationSystem::FindPathToLocationSynchronously(this, pawn->GetActorLocation(), target, pawn);
 
+	if (GetWorld()->GetNavigationSystem() == nullptr)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("navsys null"));
+		return;
+	}
+	if (GetWorld()->GetNavigationSystem()->GetMainNavData() == nullptr)
+	{
+		UE_LOG(LogRVOTest, Warning, TEXT("mainnavdata null"));
+		return;
+	}
+	path = navpath->PathPoints;
+	
+	for (FVector point : path)
+	{
+		FVector2D p{ point };
+		UE_LOG(LogRVOTest, Warning, TEXT("uav::setglob p: %f %f"), p.X, p.Y);
+
+	}
+
+	CurrentTarget = path.Num() > 0 ? FVector2D{ path[0] } : FVector2D{ pawn->GetActorLocation() };
+	
+	pathFollowSlowdown = (path.Num() <= 1);
+
+	pathIndex = 0;
+
+	//auto points = path->GetPathPoints();
+
+	//UNavigationSystem* NavSys = aiController ? UNavigationSystem::GetCurrent(aiController->GetWorld()) : nullptr;
+
+	//const ANavigationData* NavData = NavSys->GetNavDataForProps(aiController->GetNavAgentPropertiesRef());
+	//if (NavData)
+	//{
+	//	FPathFindingQuery Query(aiController, *NavData, aiController->GetNavAgentLocation(), target);
+	//	FPathFindingResult Result = NavSys->FindPathSync(Query);
+	//	auto path = Result.Path;
+	//	auto points = path->GetPathPoints();
+	//	for (auto point : points)
+	//	{
+	//		
+	//	}
+	//	auto point = points[0];
+	//	points.
+	//	//point.
+	//	if (Result.IsSuccessful())
+	//	{
+	//		PFollowComp->RequestMove(Result.Path, NULL);
+	//	}
+	//	else if (PFollowComp->GetStatus() != EPathFollowingStatus::Idle)
+	//	{
+	//		PFollowComp->AbortMove(TEXT("Aborting move due to new move request failing to generate a path"), FAIRequestID::AnyRequest);
+	//		PFollowComp->SetLastMoveAtGoal(false);
+	//	}
+	//}
+}
+
+
+void UAvoidanceComponent::MoveToGlobalTarget()
+{
+	SetGlobalTarget(GlobalTarget);
+}
